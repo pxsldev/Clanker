@@ -3,6 +3,7 @@
 A fun, feature-packed Discord entertainment bot.
 
 🌐 Website: https://clanker.pxsl.dev/
+📸 Video: https://youtu.be/ybv6r-PJwxI
 
 ## 🔗 Bot Links
 
