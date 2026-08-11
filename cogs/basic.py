@@ -38,28 +38,24 @@ class WelcomeView(discord.ui.View):
             )
         )
 
-class Basic(commands.Cog):
+class Basic(commands.GroupCog, group_name="basic"):
     def __init__(self, bot):
         self.bot = bot
         self.bot_start_time = datetime.now(timezone.utc)
 
-    @app_commands.command(name="basic", description="see what the basic category does")
-    async def basic(self, interaction: Interaction):
-        command_count = len(self.get_app_commands())
+    group_1 = app_commands.Group(
+        name="1",
+        description="Basic commands - page 1"
+    )
 
-        embed = discord.Embed(
-            title="Basic 📚",
-            description=(
-                "Hello, the basic category handles most basic commands on the bot, which are kinda boring.\n"
-                f"There are currently **{command_count} commands** in this category."
-            ),
-            color=discord.Color.blurple()
-        )
-
-        await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="welcome", description="show the Clanker welcome message")
-    async def welcome(self, interaction: discord.Interaction):
+    @group_1.command(
+        name="welcome",
+        description="show the Clanker welcome message"
+    )
+    async def welcome(
+        self,
+        interaction: discord.Interaction
+    ):
         embed = discord.Embed(
             title="👋 Thanks for adding Clanker!",
             description=(
@@ -75,15 +71,23 @@ class Basic(commands.Cog):
             colour=discord.Colour.blurple()
         )
 
-        embed.set_footer(text="Made with ❤️ by the Clanker team")
+        embed.set_footer(
+            text="Made with ❤️ by the Clanker team"
+        )
 
         await interaction.response.send_message(
             embed=embed,
             view=WelcomeView()
         )
-    
-    @app_commands.command(name="hello", description="say hello to the bot")
-    async def hello(self, interaction: Interaction):
+
+    @group_1.command(
+        name="hello",
+        description="say hello to the bot"
+    )
+    async def hello(
+        self,
+        interaction: Interaction
+    ):
         hello_responses = [
             f"Hello, {interaction.user.name}!",
             f"Hey there, {interaction.user.name}!",
@@ -96,7 +100,7 @@ class Basic(commands.Cog):
             f"Salutations, {interaction.user.name}!",
             f"fuck off! {interaction.user.name}! Thank You :D"
         ]
-        
+
         embed = discord.Embed(
             title="Hello! 👋",
             description=random.choice(hello_responses),
@@ -104,9 +108,15 @@ class Basic(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="ping", description="get bot's latency")
-    async def ping(self, interaction: Interaction):
+
+    @group_1.command(
+        name="ping",
+        description="get bot's latency"
+    )
+    async def ping(
+        self,
+        interaction: Interaction
+    ):
         embed = discord.Embed(
             title="Pong! 🏓",
             description=f"Ping: {round(self.bot.latency * 1000)} ms",
@@ -114,47 +124,99 @@ class Basic(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="uptime", description="how long bot been online")
-    async def uptime(self, interaction: Interaction):
+
+    @group_1.command(
+        name="uptime",
+        description="how long bot been online"
+    )
+    async def uptime(
+        self,
+        interaction: Interaction
+    ):
         now = datetime.now(timezone.utc)
-        uptime_seconds = (now - self.bot_start_time).total_seconds()
+        uptime_seconds = (
+            now - self.bot_start_time
+        ).total_seconds()
 
-        days, remainder = divmod(uptime_seconds, 86400)
-        hours, remainder = divmod(remainder, 3600)
-        minutes, seconds = divmod(remainder, 60)
+        days, remainder = divmod(
+            uptime_seconds,
+            86400
+        )
 
-        uptime_str = f"{int(days)}d {int(hours)}h {int(minutes)}m {int(seconds)}s"
+        hours, remainder = divmod(
+            remainder,
+            3600
+        )
+
+        minutes, seconds = divmod(
+            remainder,
+            60
+        )
+
+        uptime_str = (
+            f"{int(days)}d "
+            f"{int(hours)}h "
+            f"{int(minutes)}m "
+            f"{int(seconds)}s"
+        )
 
         embed = discord.Embed(
             title="Uptime ⏱️",
-            description=f"The bot has been online for: {uptime_str}",
+            description=(
+                f"The bot has been online for: {uptime_str}"
+            ),
             color=discord.Color.blurple()
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="usercount", description="how many users does Clanker serve")
-    async def usercount(self, interaction: Interaction):
+
+    @group_1.command(
+        name="usercount",
+        description="how many users does Clanker serve"
+    )
+    async def usercount(
+        self,
+        interaction: Interaction
+    ):
         servers = len(self.bot.guilds)
-        users = sum(g.member_count or 0 for g in self.bot.guilds)
+        users = sum(
+            g.member_count or 0
+            for g in self.bot.guilds
+        )
 
         embed = discord.Embed(
             title="User Count 👤",
-            description=f"Clanker serves **{users:,}** users across **{servers:,}** servers!",
+            description=(
+                f"Clanker serves **{users:,}** users "
+                f"across **{servers:,}** servers!"
+            ),
             color=discord.Color.blurple()
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="cmdcount", description="how many commands Clanker has")
-    async def cmdcount(self, interaction: Interaction):
-        total = len(self.bot.tree.get_commands())
 
+    @group_1.command(
+        name="cmdcount",
+        description="how many commands Clanker has"
+    )
+    async def cmdcount(
+        self,
+        interaction: Interaction
+    ):
+        total = 0
         category_counts = {}
 
-        for cmd in self.bot.tree.get_commands():
-            cog_name = cmd.binding.__class__.__name__ if cmd.binding else "No Category"
+        for cmd in self.bot.tree.walk_commands():
+            if isinstance(cmd, app_commands.Group):
+                continue
+
+            total += 1
+
+            cog_name = (
+                cmd.binding.__class__.__name__
+                if getattr(cmd, "binding", None)
+                else "No Category"
+            )
 
             if cog_name not in category_counts:
                 category_counts[cog_name] = 0
@@ -173,64 +235,146 @@ class Basic(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="version", description="see the bot's version")
-    async def version(self, interaction: discord.Interaction):
+
+    @group_1.command(
+        name="version",
+        description="see the bot's version"
+    )
+    async def version(
+        self,
+        interaction: discord.Interaction
+    ):
         with open("data.json", "r") as f:
             data = json.load(f)
-        
+
         v = data.get("version")
+
         if not v:
-            raise ValueError("Version not found in data.json!")
+            raise ValueError(
+                "Version not found in data.json!"
+            )
 
         embed = discord.Embed(
             title="Version 🏷️",
-            description=f"Clanker is currently running v{v}!",
+            description=(
+                f"Clanker is currently running v{v}!"
+            ),
             color=discord.Color.blurple()
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="info", description="view information about Clanker")
-    async def info(self, interaction: discord.Interaction):
+
+    @group_1.command(
+        name="info",
+        description="view information about Clanker"
+    )
+    async def info(
+        self,
+        interaction: discord.Interaction
+    ):
         with open("data.json", "r") as f:
             data = json.load(f)
 
-        version = data.get("version", "Unknown")
-        ping = round(self.bot.latency * 1000)
-        users = sum(g.member_count or 0 for g in self.bot.guilds)
+        version = data.get(
+            "version",
+            "Unknown"
+        )
+
+        ping = round(
+            self.bot.latency * 1000
+        )
+
+        users = sum(
+            g.member_count or 0
+            for g in self.bot.guilds
+        )
+
         servers = len(self.bot.guilds)
-        commands = len(self.bot.tree.get_commands())
+
+        commands = sum(
+            1
+            for cmd in self.bot.tree.walk_commands()
+            if not isinstance(cmd, app_commands.Group)
+        )
 
         embed = discord.Embed(
             title="Info 🤖",
             color=discord.Color.blurple()
         )
 
-        embed.add_field(name="🏷️ Version", value=f"v{version}", inline=True)
-        embed.add_field(name="📡 Ping", value=f"{ping} ms", inline=True)
-        embed.add_field(name="🤖 Commands", value=str(commands), inline=True)
-        embed.add_field(name="👤 Users", value=f"{users:,}", inline=True)
-        embed.add_field(name="🖥️ Servers", value=f"{servers:,}", inline=True)
+        embed.add_field(
+            name="🏷️ Version",
+            value=f"v{version}",
+            inline=True
+        )
+
+        embed.add_field(
+            name="📡 Ping",
+            value=f"{ping} ms",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🤖 Commands",
+            value=str(commands),
+            inline=True
+        )
+
+        embed.add_field(
+            name="👤 Users",
+            value=f"{users:,}",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🖥️ Servers",
+            value=f"{servers:,}",
+            inline=True
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="vote", description="vote for the bot on top.gg")
-    async def vote(self, interaction: discord.Interaction):
+
+    @group_1.command(
+        name="vote",
+        description="vote for the bot on top.gg"
+    )
+    async def vote(
+        self,
+        interaction: discord.Interaction
+    ):
         embed = discord.Embed(
             title="Vote for Clanker! 🗳️",
-            description="Help us grow by voting for the bot on top.gg!",
+            description=(
+                "Help us grow by voting for the bot on top.gg!"
+            ),
             color=discord.Color.blurple()
         )
-        embed.add_field(name="Vote Link", value="[Click here to vote](https://top.gg/bot/1482397035909873865/vote)", inline=False)
+
+        embed.add_field(
+            name="Vote Link",
+            value=(
+                "[Click here to vote]"
+                "(https://top.gg/bot/1482397035909873865/vote)"
+            ),
+            inline=False
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="invite", description="get bot invite link")
-    async def invite(self, interaction: Interaction):
+
+    @group_1.command(
+        name="invite",
+        description="get bot invite link"
+    )
+    async def invite(
+        self,
+        interaction: Interaction
+    ):
         embed = discord.Embed(
             title="Invite Me 🤖",
-            description="[Click here to invite the bot](https://top.gg/bot/1482397035909873865)",
+            description=(
+                "[Click here to invite the bot]"
+                "(https://top.gg/bot/1482397035909873865)"
+            ),
             color=discord.Color.blurple()
         )
 
@@ -238,19 +382,29 @@ class Basic(commands.Cog):
 
     def get_all_commands(self):
         cmds = []
-        for cmd in self.bot.tree.get_commands():
+
+        for cmd in self.bot.tree.walk_commands():
+
             if isinstance(cmd, app_commands.Group):
-                cmds.extend(cmd.commands)
-            else:
-                cmds.append(cmd)
+                continue
+
+            cmds.append(cmd)
+
         return cmds
 
-    @app_commands.command(name="help", description="get help with the bot")
-    async def help(self, interaction: discord.Interaction):
+    @group_1.command(
+        name="help",
+        description="get help with the bot"
+    )
+    async def help(
+        self,
+        interaction: discord.Interaction
+    ):
 
         def is_admin(user_id):
             return (
-                user_id in self.bot.data.get("admins", []) or
+                user_id in self.bot.data.get("admins", [])
+                or
                 user_id in self.bot.data.get("owners", [])
             )
 
@@ -258,14 +412,24 @@ class Basic(commands.Cog):
         admin_commands = []
 
         for cmd in self.get_all_commands():
-            cog_name = cmd.binding.__class__.__name__ if getattr(cmd, "binding", None) else "Other"
+
+            cog_name = (
+                cmd.binding.__class__.__name__
+                if getattr(cmd, "binding", None)
+                else "Other"
+            )
 
             if cog_name == "Admin":
+
                 if is_admin(interaction.user.id):
                     admin_commands.append(cmd)
+
                 continue
 
-            categories.setdefault(cog_name, []).append(cmd)
+            categories.setdefault(
+                cog_name,
+                []
+            ).append(cmd)
 
         if is_admin(interaction.user.id) and admin_commands:
             categories["Admin"] = admin_commands
@@ -273,22 +437,42 @@ class Basic(commands.Cog):
         pages = []
 
         for category, cmds in categories.items():
-            cmds = sorted(cmds, key=lambda c: c.name)
+
+            cmds = sorted(
+                cmds,
+                key=lambda c: c.name
+            )
 
             chunk_size = 5
-            for i in range(0, len(cmds), chunk_size):
-                chunk = cmds[i:i + chunk_size]
+
+            for i in range(
+                0,
+                len(cmds),
+                chunk_size
+            ):
+                chunk = cmds[
+                    i:i + chunk_size
+                ]
 
                 description = "\n".join(
-                    f"{getattr(cmd, 'mention', f'/{cmd.name}')} - {cmd.description}"
+                    f"{getattr(cmd, 'mention', f'/{cmd.name}')} "
+                    f"- {cmd.description}"
                     for cmd in chunk
                 )
 
-                page_num = (i // chunk_size) + 1
-                total_pages = (len(cmds) + chunk_size - 1) // chunk_size
+                page_num = (
+                    i // chunk_size
+                ) + 1
+
+                total_pages = (
+                    len(cmds) + chunk_size - 1
+                ) // chunk_size
 
                 embed = discord.Embed(
-                    title=f"Help - {category} ({page_num}/{total_pages})",
+                    title=(
+                        f"Help - {category} "
+                        f"({page_num}/{total_pages})"
+                    ),
                     description=description,
                     color=discord.Color.blurple()
                 )
@@ -304,20 +488,51 @@ class Basic(commands.Cog):
                 )
             )
 
+
         class HelpView(discord.ui.View):
+
             def __init__(self):
                 super().__init__(timeout=120)
                 self.current = 0
 
-            @discord.ui.button(label="◀️", style=discord.ButtonStyle.gray)
-            async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
-                self.current = (self.current - 1) % len(pages)
-                await interaction.response.edit_message(embed=pages[self.current], view=self)
 
-            @discord.ui.button(label="▶️", style=discord.ButtonStyle.gray)
-            async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
-                self.current = (self.current + 1) % len(pages)
-                await interaction.response.edit_message(embed=pages[self.current], view=self)
+            @discord.ui.button(
+                label="◀️",
+                style=discord.ButtonStyle.gray
+            )
+            async def previous(
+                self,
+                interaction: discord.Interaction,
+                button: discord.ui.Button
+            ):
+                self.current = (
+                    self.current - 1
+                ) % len(pages)
+
+                await interaction.response.edit_message(
+                    embed=pages[self.current],
+                    view=self
+                )
+
+
+            @discord.ui.button(
+                label="▶️",
+                style=discord.ButtonStyle.gray
+            )
+            async def next(
+                self,
+                interaction: discord.Interaction,
+                button: discord.ui.Button
+            ):
+                self.current = (
+                    self.current + 1
+                ) % len(pages)
+
+                await interaction.response.edit_message(
+                    embed=pages[self.current],
+                    view=self
+                )
+
 
         view = HelpView()
 
@@ -326,9 +541,15 @@ class Basic(commands.Cog):
             view=view,
             ephemeral=True
         )
-    
-    @app_commands.command(name="credits", description="view the people who helped make Clanker")
-    async def credits(self, interaction: Interaction):
+
+    @group_1.command(
+        name="credits",
+        description="view the people who helped make Clanker"
+    )
+    async def credits(
+        self,
+        interaction: Interaction
+    ):
 
         async def get_credits():
             url = "https://clanker.pxsl.dev/credits.json"
@@ -337,10 +558,9 @@ class Basic(commands.Cog):
                 async with session.get(url) as response:
                     return await response.json()
 
-
         try:
             data = await get_credits()
-    
+
         except Exception:
             await interaction.response.send_message(
                 embed=discord.Embed(
@@ -352,12 +572,14 @@ class Basic(commands.Cog):
             )
             return
 
-
         pages = []
 
         for key, section in data.items():
 
-            people = section.get("people", [])
+            people = section.get(
+                "people",
+                []
+            )
 
             if people:
                 description = ""
@@ -372,7 +594,10 @@ class Basic(commands.Cog):
                 description = "No one listed yet."
 
             embed = discord.Embed(
-                title=f"{section.get('title', key.title())}",
+                title=section.get(
+                    "title",
+                    key.title()
+                ),
                 description=description,
                 color=discord.Color.blurple()
             )
@@ -402,7 +627,10 @@ class Basic(commands.Cog):
 
 
         for index, page in enumerate(pages):
-            update_footer(page, index)
+            update_footer(
+                page,
+                index
+            )
 
 
         class CreditsView(discord.ui.View):
@@ -421,7 +649,9 @@ class Basic(commands.Cog):
                 interaction: discord.Interaction,
                 button: discord.ui.Button
             ):
-                self.current = (self.current - 1) % len(pages)
+                self.current = (
+                    self.current - 1
+                ) % len(pages)
 
                 await interaction.response.edit_message(
                     embed=pages[self.current],
@@ -438,7 +668,9 @@ class Basic(commands.Cog):
                 interaction: discord.Interaction,
                 button: discord.ui.Button
             ):
-                self.current = (self.current + 1) % len(pages)
+                self.current = (
+                    self.current + 1
+                ) % len(pages)
 
                 await interaction.response.edit_message(
                     embed=pages[self.current],
@@ -457,6 +689,7 @@ class Basic(commands.Cog):
             embed=pages[0],
             view=view
         )
+
 
 async def setup(bot):
     await bot.add_cog(Basic(bot))

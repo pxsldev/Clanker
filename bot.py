@@ -12,8 +12,10 @@ import asyncio
 import os
 import json
 import time
-import random
 import topgg
+import base64
+import urllib.request
+import urllib.error
 
 with open("data.json", "r") as f:
     data = json.load(f)
@@ -26,7 +28,10 @@ TOPGG_TOKEN = data.get("topgg_token")
 if not TOPGG_TOKEN:
     raise ValueError("TOPGG_TOKEN not found in data.json!")
 
-TESTING = False
+GITHUB_PAT = data.get("github_pat")
+GITHUB_REPO = data.get("github_repo")
+
+TESTING = True
 TEST_GUILD_ID = 1482405732329459754
 
 cooldowns = {}
@@ -103,6 +108,12 @@ class Clanker(commands.Bot):
 
         print("[BOOT] Status loop starting...")
         self.statusloop.start()
+
+        if not TESTING:
+            print("[BOOT] GitHub stats loop starting...")
+            self.github_stats_loop.start()
+        else:
+            print("[GITHUB] Stats update loop not starting, as we are in testing mode.")
         
     @tasks.loop(seconds=15)
     async def statusloop(self):
@@ -144,6 +155,97 @@ class Clanker(commands.Bot):
     
     @update_stats.before_loop
     async def before_update_stats(self):
+        await self.wait_until_ready()
+
+    @tasks.loop(minutes=5)
+    async def github_stats_loop(self):
+        try:
+            guild_count = len(self.guilds)
+            total_members = sum(
+                guild.member_count or 0
+                for guild in self.guilds
+            )
+
+            stats = {
+                "guilds": guild_count,
+                "users": total_members,
+                "peak_ccu": self.peak_ccu,
+                "updated_at": int(time.time())
+            }
+
+            stats_json = json.dumps(stats, indent=4)
+
+            url = (
+                f"https://api.github.com/repos/"
+                f"{GITHUB_REPO}/contents/stats.json"
+            )
+
+            headers = {
+                "Authorization": f"Bearer {GITHUB_PAT}",
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "Clanker-Stats-Updater"
+            }
+
+            request = urllib.request.Request(
+                url,
+                headers=headers,
+                method="GET"
+            )
+
+            sha = None
+
+            try:
+                with urllib.request.urlopen(request) as response:
+                    existing_file = json.loads(
+                        response.read().decode("utf-8")
+                    )
+
+                    sha = existing_file.get("sha")
+
+            except urllib.error.HTTPError as e:
+                if e.code != 404:
+                    raise
+
+                print("[GITHUB] stats.json doesn't exist - creating it.")
+
+            encoded_content = base64.b64encode(
+                stats_json.encode("utf-8")
+            ).decode("utf-8")
+
+            payload = {
+                "message": "Update bot statistics",
+                "content": encoded_content
+            }
+
+            if sha:
+                payload["sha"] = sha
+
+            request = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    **headers,
+                    "Content-Type": "application/json"
+                },
+                method="PUT"
+            )
+
+            with urllib.request.urlopen(request) as response:
+                response.read()
+
+            print(
+                f"[GITHUB] Updated stats.json - "
+                f"{guild_count:,} servers / "
+                f"{total_members:,} users / "
+                f"{self.peak_ccu:,} peak CCU"
+            )
+
+        except Exception as e:
+            print(f"[GITHUB] Failed to update stats.json: {e}")
+
+
+    @github_stats_loop.before_loop
+    async def before_github_stats_loop(self):
         await self.wait_until_ready()
 
 bot = Clanker()

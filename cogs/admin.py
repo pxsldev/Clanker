@@ -7,20 +7,26 @@ import json
 import math
 import time
 
+
 def owner_check():
     async def predicate(interaction: Interaction):
         return interaction.user.id in interaction.client.data.get("owners", [])
+
     return app_commands.check(predicate)
+
 
 def admin_check():
     async def predicate(interaction: Interaction):
         return (
-            interaction.user.id in interaction.client.data.get("admins", []) or
-            interaction.user.id in interaction.client.data.get("owners", [])
+            interaction.user.id in interaction.client.data.get("admins", [])
+            or interaction.user.id in interaction.client.data.get("owners", [])
         )
+
     return app_commands.check(predicate)
 
-class Admin(commands.Cog):
+
+class Admin(commands.GroupCog, group_name="admin"):
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -28,10 +34,25 @@ class Admin(commands.Cog):
         with open("data.json", "w") as f:
             json.dump(self.bot.data, f, indent=4)
 
-    @app_commands.command(name="addadmin", description="(OWNER) give someone admin")
-    @owner_check()
-    async def addadmin(self, interaction: Interaction, user: discord.Member):
+    # ============================================================
+    # PAGE 1
+    # ============================================================
 
+    group_1 = app_commands.Group(
+        name="1",
+        description="Admin commands - page 1"
+    )
+
+    @group_1.command(
+        name="addadmin",
+        description="(OWNER) give someone admin"
+    )
+    @owner_check()
+    async def addadmin(
+        self,
+        interaction: Interaction,
+        user: discord.Member
+    ):
         if user.id in self.bot.data.get("admins", []):
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -54,10 +75,16 @@ class Admin(commands.Cog):
             ephemeral=True
         )
 
-    @app_commands.command(name="removeadmin", description="(OWNER) remove admin")
+    @group_1.command(
+        name="removeadmin",
+        description="(OWNER) remove admin"
+    )
     @owner_check()
-    async def removeadmin(self, interaction: Interaction, user: discord.Member):
-
+    async def removeadmin(
+        self,
+        interaction: Interaction,
+        user: discord.Member
+    ):
         if user.id not in self.bot.data.get("admins", []):
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -80,10 +107,15 @@ class Admin(commands.Cog):
             ephemeral=True
         )
 
-    @app_commands.command(name="listadmins", description="(OWNER) list admins")
+    @group_1.command(
+        name="listadmins",
+        description="(OWNER) list admins"
+    )
     @owner_check()
-    async def listadmins(self, interaction: Interaction):
-
+    async def listadmins(
+        self,
+        interaction: Interaction
+    ):
         admins = self.bot.data.get("admins", [])
 
         if not admins:
@@ -107,36 +139,19 @@ class Admin(commands.Cog):
             ephemeral=True
         )
 
-    @addadmin.error
-    @removeadmin.error
-    @listadmins.error
-    async def admin_error(self, interaction: Interaction, error):
-
-        if isinstance(error, app_commands.errors.CheckFailure):
-            return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="❌ Permission Denied",
-                    description="You are not allowed to use this command.",
-                    color=discord.Color.red()
-                ),
-                ephemeral=True
-            )
-
-        if not interaction.response.is_done():
-            await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="⚠️ Error",
-                    description="Something went wrong.",
-                    color=discord.Color.red()
-                ),
-                ephemeral=True
-            )
-        raise error
-
-    @app_commands.command(name="license", description="(OWNER) send license troll message")
-    async def license(self, interaction: Interaction, channel: discord.TextChannel):
-
-        if interaction.user.id not in self.bot.data.get("admins", []) and interaction.user.id not in self.bot.data.get("owners", []):
+    @group_1.command(
+        name="license",
+        description="(OWNER) send license troll message"
+    )
+    async def license(
+        self,
+        interaction: Interaction,
+        channel: discord.TextChannel
+    ):
+        if (
+            interaction.user.id not in self.bot.data.get("admins", [])
+            and interaction.user.id not in self.bot.data.get("owners", [])
+        ):
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     title="❌ No Permission",
@@ -150,9 +165,17 @@ class Admin(commands.Cog):
             def __init__(self):
                 super().__init__(timeout=60)
 
-            @discord.ui.button(label="Renew License", style=discord.ButtonStyle.red)
-            async def renew(self, interaction_btn: Interaction, button: discord.ui.Button):
+            @discord.ui.button(
+                label="Renew License",
+                style=discord.ButtonStyle.red
+            )
+            async def renew(
+                self,
+                interaction_btn: Interaction,
+                button: discord.ui.Button
+            ):
                 await interaction_btn.message.delete()
+
                 await interaction_btn.response.send_message(
                     embed=discord.Embed(
                         title="😂 Trolled",
@@ -161,6 +184,7 @@ class Admin(commands.Cog):
                     ),
                     ephemeral=True
                 )
+
                 self.stop()
 
         embed = discord.Embed(
@@ -170,7 +194,10 @@ class Admin(commands.Cog):
         )
 
         try:
-            await channel.send(embed=embed, view=RenewView())
+            await channel.send(
+                embed=embed,
+                view=RenewView()
+            )
 
             await interaction.response.send_message(
                 embed=discord.Embed(
@@ -191,10 +218,17 @@ class Admin(commands.Cog):
                 ephemeral=True
             )
 
-    @app_commands.command(name="give", description="(OWNER) give money")
+    @group_1.command(
+        name="give",
+        description="(OWNER) give money"
+    )
     @owner_check()
-    async def give(self, interaction: Interaction, user: discord.Member, amount: int):
-
+    async def give(
+        self,
+        interaction: Interaction,
+        user: discord.Member,
+        amount: int
+    ):
         if amount <= 0:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -206,6 +240,7 @@ class Admin(commands.Cog):
             )
 
         economy = self.bot.get_cog("Economy")
+
         if not economy:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -216,7 +251,11 @@ class Admin(commands.Cog):
                 ephemeral=True
             )
 
-        row = economy.get_user(interaction.guild.id, user.id)
+        row = economy.get_user(
+            interaction.guild.id,
+            user.id
+        )
+
         target = economy.user_dict(row)
 
         target["balance"] += amount
@@ -231,10 +270,17 @@ class Admin(commands.Cog):
             ephemeral=True
         )
 
-    @app_commands.command(name="take", description="(OWNER) remove money")
+    @group_1.command(
+        name="take",
+        description="(OWNER) remove money"
+    )
     @owner_check()
-    async def take(self, interaction: Interaction, user: discord.Member, amount: int):
-
+    async def take(
+        self,
+        interaction: Interaction,
+        user: discord.Member,
+        amount: int
+    ):
         if amount <= 0:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -246,6 +292,7 @@ class Admin(commands.Cog):
             )
 
         economy = self.bot.get_cog("Economy")
+
         if not economy:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -256,11 +303,16 @@ class Admin(commands.Cog):
                 ephemeral=True
             )
 
-        row = economy.get_user(interaction.guild.id, user.id)
+        row = economy.get_user(
+            interaction.guild.id,
+            user.id
+        )
+
         target = economy.user_dict(row)
 
         removed = min(amount, target["balance"])
         target["balance"] -= removed
+
         economy.update_user(target)
 
         await interaction.response.send_message(
@@ -272,10 +324,18 @@ class Admin(commands.Cog):
             ephemeral=True
         )
 
-    @app_commands.command(name="dm", description="(OWNER) DM a user")
+    @group_1.command(
+        name="dm",
+        description="(OWNER) DM a user"
+    )
     @owner_check()
-    async def dm(self, interaction: Interaction, user: discord.User, title: str, message: str):
-
+    async def dm(
+        self,
+        interaction: Interaction,
+        user: discord.User,
+        title: str,
+        message: str
+    ):
         try:
             embed = discord.Embed(
                 title=title,
@@ -303,12 +363,21 @@ class Admin(commands.Cog):
                 ),
                 ephemeral=True
             )
-    
-    @app_commands.command(name="servers", description="(OWNER/ADMIN) list all bot servers")
-    @admin_check()
-    async def servers(self, interaction: Interaction):
 
-        guilds = sorted(self.bot.guilds, key=lambda g: g.member_count or 0, reverse=True)
+    @group_1.command(
+        name="servers",
+        description="(OWNER/ADMIN) list all bot servers"
+    )
+    @admin_check()
+    async def servers(
+        self,
+        interaction: Interaction
+    ):
+        guilds = sorted(
+            self.bot.guilds,
+            key=lambda g: g.member_count or 0,
+            reverse=True
+        )
 
         per_page = 10
         pages = math.ceil(len(guilds) / per_page)
@@ -320,15 +389,24 @@ class Admin(commands.Cog):
             chunk = guilds[start:end]
 
             desc = ""
+
             for i, g in enumerate(chunk, start=start + 1):
-                desc += f"**{i}. {g.name}**\n👥 {g.member_count} members\n🆔 `{g.id}`\n\n"
+                desc += (
+                    f"**{i}. {g.name}**\n"
+                    f"👥 {g.member_count} members\n"
+                    f"🆔 `{g.id}`\n\n"
+                )
 
             embed = discord.Embed(
-                title=f"🗂️ Server List ({page+1}/{pages})",
+                title=f"🗂️ Server List ({page + 1}/{pages})",
                 description=desc or "No servers found.",
                 color=discord.Color.blurple()
             )
-            embed.set_footer(text=f"Total servers: {len(guilds)}")
+
+            embed.set_footer(
+                text=f"Total servers: {len(guilds)}"
+            )
+
             return embed
 
         class ServerView(discord.ui.View):
@@ -336,22 +414,41 @@ class Admin(commands.Cog):
                 super().__init__(timeout=60)
                 self.page = 0
 
-            async def update(self, interaction_btn: Interaction):
+            async def update(
+                self,
+                interaction_btn: Interaction
+            ):
                 await interaction_btn.response.edit_message(
                     embed=make_embed(self.page),
                     view=self
                 )
 
-            @discord.ui.button(label="⬅️ Prev", style=discord.ButtonStyle.secondary)
-            async def prev(self, interaction_btn: Interaction, button: discord.ui.Button):
+            @discord.ui.button(
+                label="⬅️ Prev",
+                style=discord.ButtonStyle.secondary
+            )
+            async def prev(
+                self,
+                interaction_btn: Interaction,
+                button: discord.ui.Button
+            ):
                 if self.page > 0:
                     self.page -= 1
+
                 await self.update(interaction_btn)
 
-            @discord.ui.button(label="➡️ Next", style=discord.ButtonStyle.secondary)
-            async def next(self, interaction_btn: Interaction, button: discord.ui.Button):
+            @discord.ui.button(
+                label="➡️ Next",
+                style=discord.ButtonStyle.secondary
+            )
+            async def next(
+                self,
+                interaction_btn: Interaction,
+                button: discord.ui.Button
+            ):
                 if self.page < pages - 1:
                     self.page += 1
+
                 await self.update(interaction_btn)
 
         await interaction.response.send_message(
@@ -359,10 +456,16 @@ class Admin(commands.Cog):
             view=ServerView(),
             ephemeral=True
         )
-    
-    @app_commands.command(name="ccu", description="(OWNER/ADMIN) View current CCU")
+
+    @group_1.command(
+        name="ccu",
+        description="(OWNER/ADMIN) View current CCU"
+    )
     @admin_check()
-    async def ccu(self, interaction: Interaction):
+    async def ccu(
+        self,
+        interaction: Interaction
+    ):
         now = time.time()
 
         expired = [
@@ -391,7 +494,11 @@ class Admin(commands.Cog):
             inline=True
         )
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))
