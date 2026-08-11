@@ -1,7 +1,9 @@
 {
     "token": "",
-    "version": "1.1.4",
+    "version": "1.1.5",
     "topgg_token": "",
+    "github_pat": "",
+    "github_repo": "PxslGames/clanker.pxsl.dev",
     "owners": [
         994116541559865416,
         1033895617505788015
