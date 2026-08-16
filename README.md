@@ -43,7 +43,7 @@ You are welcome to look through the code and contribute, but getting your own in
 
 ## 😭 Documentation
 
-We currently don't have proper documentation for the code...
+We currently don't have proper documentation for the code... (sadly)
 
 because, well...
 
