@@ -109,7 +109,7 @@ class Text(commands.GroupCog, group_name="text"):
 
     group_1 = app_commands.Group(
         name="1",
-        description="Text transformations - page 1"
+        description="Text - page 1"
     )
 
     @group_1.command(

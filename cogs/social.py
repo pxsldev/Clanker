@@ -30,13 +30,14 @@ class ClickerView(discord.ui.View):
 
         await interaction.response.edit_message(view=self)
 
-class Social(commands.Cog):
+
+class Social(commands.GroupCog, group_name="social"):
     def __init__(self, bot):
         self.bot = bot
         self.profile_db = sqlite3.connect("profiles.db")
         self.profile_cursor = self.profile_db.cursor()
         self.setup_profiles()
-    
+
     def setup_profiles(self):
         self.profile_cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_profiles (
@@ -130,7 +131,6 @@ class Social(commands.Cog):
             command
         ))
 
-
         self.profile_db.commit()
 
     def get_profile(
@@ -205,32 +205,31 @@ class Social(commands.Cog):
         if interaction.type != discord.InteractionType.application_command:
             return
 
-
         if not interaction.command:
             return
-
 
         self.track_command(
             interaction.user.id,
             interaction.command.name
         )
-    
-    @app_commands.command(name="social", description="see what the social category does")
-    async def basic(self, interaction: Interaction):
-        command_count = len(self.get_app_commands())
 
-        embed = discord.Embed(
-            title="Social 📚",
-            description="Hello, the social category handles most social/roleplay commands on the bot.\n"
-                        f"There are currently **{command_count} commands** in this category.",
-            color=discord.Color.blurple()
-        )
+    group_1 = app_commands.Group(
+        name="1",
+        description="Social - page 1"
+    )
 
-        await interaction.response.send_message(embed=embed)
-        
-    @app_commands.command(name="expose", description="expose a user...")
-    @app_commands.describe(user="user to expose")
-    async def expose(self, interaction: Interaction, user: discord.User = None):
+    @group_1.command(
+        name="expose",
+        description="expose a user..."
+    )
+    @app_commands.describe(
+        user="user to expose"
+    )
+    async def expose(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
 
@@ -258,14 +257,26 @@ class Social(commands.Cog):
             description=random.choice(exposes),
             color=discord.Color.blurple()
         )
+
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text=f"Exposed by {interaction.user.name} • Clanker")
+        embed.set_footer(
+            text=f"Exposed by {interaction.user.name} • Clanker"
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="compliment", description="give someone a compliment :3")
-    @app_commands.describe(user="user to compliment")
-    async def compliment(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="compliment",
+        description="give someone a compliment :3"
+    )
+    @app_commands.describe(
+        user="user to compliment"
+    )
+    async def compliment(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
 
@@ -288,14 +299,26 @@ class Social(commands.Cog):
             description=random.choice(compliments),
             color=discord.Color.blurple()
         )
+
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text=f"Complimented by {interaction.user.name} • Clanker")
+        embed.set_footer(
+            text=f"Complimented by {interaction.user.name} • Clanker"
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="roast", description="roast someone :3")
-    @app_commands.describe(user="user to roast")
-    async def roast(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="roast",
+        description="roast someone :3"
+    )
+    @app_commands.describe(
+        user="user to roast"
+    )
+    async def roast(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
 
@@ -314,73 +337,123 @@ class Social(commands.Cog):
             description=random.choice(roasts),
             color=discord.Color.blurple()
         )
+
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text=f"Roasted by {interaction.user.name} • Clanker")
+        embed.set_footer(
+            text=f"Roasted by {interaction.user.name} • Clanker"
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="slap", description="slap someone lol")
-    async def slap(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="slap",
+        description="slap someone lol"
+    )
+    async def slap(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
-        
+
         embed = discord.Embed(
             title="Slap 💥",
             description=f"**{user.name}** got slapped with a force of **{random.randint(1, 100)}%**!",
             color=discord.Color.blurple()
         )
+
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text=f"Slapped by {interaction.user.name} • Clanker")
+        embed.set_footer(
+            text=f"Slapped by {interaction.user.name} • Clanker"
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="hug", description="hug someone <3")
-    async def hug(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="hug",
+        description="hug someone <3"
+    )
+    async def hug(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
-        
+
         embed = discord.Embed(
             title="Hug 🫂",
             description=f"**{user.name}** got hugged with a force of **{random.randint(1, 100)}%**!",
             color=discord.Color.blurple()
         )
+
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text=f"Hugged by {interaction.user.name} • Clanker")
+        embed.set_footer(
+            text=f"Hugged by {interaction.user.name} • Clanker"
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="poke", description="poke someone hehe")
-    async def poke(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="poke",
+        description="poke someone hehe"
+    )
+    async def poke(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
-        
+
         embed = discord.Embed(
             title="Poke 👉",
             description=f"**{user.name}** got poked with a force of **{random.randint(1, 100)}%**!",
             color=discord.Color.blurple()
         )
+
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text=f"Poked by {interaction.user.name} • Clanker")
+        embed.set_footer(
+            text=f"Poked by {interaction.user.name} • Clanker"
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="highfive", description="high five someone!")
-    async def highfive(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="highfive",
+        description="high five someone!"
+    )
+    async def highfive(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
-        
+
         embed = discord.Embed(
             title="High Five 👏",
             description=f"**{user.name}** got high fived with a force of **{random.randint(1, 100)}%**!",
             color=discord.Color.blurple()
         )
+
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text=f"High Fived by {interaction.user.name} • Clanker")
+        embed.set_footer(
+            text=f"High Fived by {interaction.user.name} • Clanker"
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="rate", description="use our very accurate rating system!!1!!")
-    async def rate(self, interaction: Interaction, thing: str):
+
+    @group_1.command(
+        name="rate",
+        description="use our very accurate rating system!!1!!"
+    )
+    async def rate(
+        self,
+        interaction: Interaction,
+        thing: str
+    ):
         rating = random.randint(1, 10)
 
         embed = discord.Embed(
@@ -390,9 +463,16 @@ class Social(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="nominate", description="this user is most likely to...")
-    async def nominate(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="nominate",
+        description="this user is most likely to..."
+    )
+    async def nominate(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
 
@@ -412,14 +492,26 @@ class Social(commands.Cog):
             description=random.choice(nominations),
             color=discord.Color.blurple()
         )
+
         embed.set_thumbnail(url=user.display_avatar.url)
-        embed.set_footer(text=f"Nominated by {interaction.user.name} • Clanker")
+        embed.set_footer(
+            text=f"Nominated by {interaction.user.name} • Clanker"
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="court", description="put someone on trial")
-    @app_commands.describe(user="the defendant")
-    async def court(self, interaction: discord.Interaction, user: discord.Member):
+
+    @group_1.command(
+        name="court",
+        description="put someone on trial"
+    )
+    @app_commands.describe(
+        user="the defendant"
+    )
+    async def court(
+        self,
+        interaction: discord.Interaction,
+        user: discord.Member
+    ):
 
         crimes = [
             "holding a salmon in a suspicious manner",
@@ -460,19 +552,56 @@ class Social(commands.Cog):
             color=discord.Color.blurple()
         )
 
-        embed.add_field(name="Defendant", value=user.mention, inline=False)
-        embed.add_field(name="Charge", value=crime, inline=False)
-        embed.add_field(name="Evidence", value=proof, inline=False)
-        embed.add_field(name="Verdict", value="GUILTY", inline=True)
-        embed.add_field(name="Sentence", value=sentence, inline=False)
+        embed.add_field(
+            name="Defendant",
+            value=user.mention,
+            inline=False
+        )
 
-        embed.set_footer(text="justice has been clanked.")
+        embed.add_field(
+            name="Charge",
+            value=crime,
+            inline=False
+        )
+
+        embed.add_field(
+            name="Evidence",
+            value=proof,
+            inline=False
+        )
+
+        embed.add_field(
+            name="Verdict",
+            value="GUILTY",
+            inline=True
+        )
+
+        embed.add_field(
+            name="Sentence",
+            value=sentence,
+            inline=False
+        )
+
+        embed.set_footer(
+            text="justice has been clanked."
+        )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="ship", description="check compatibility between two users")
-    @app_commands.describe(user1="first user", user2="second user")
-    async def ship(self, interaction: discord.Interaction, user1: discord.Member, user2: discord.Member):
+
+    @group_1.command(
+        name="ship",
+        description="check compatibility between two users"
+    )
+    @app_commands.describe(
+        user1="first user",
+        user2="second user"
+    )
+    async def ship(
+        self,
+        interaction: discord.Interaction,
+        user1: discord.Member,
+        user2: discord.Member
+    ):
 
         seed = (user1.id + user2.id) % 100
         score = (seed * random.randint(1, 100)) % 101
@@ -501,15 +630,38 @@ class Social(commands.Cog):
             color=discord.Color.blurple()
         )
 
-        embed.add_field(name="Ship", value=f"{user1.mention} ❤️ {user2.mention}", inline=False)
-        embed.add_field(name="Compatibility", value=f"**{score}%**", inline=True)
-        embed.add_field(name="Result", value=vibe, inline=False)
+        embed.add_field(
+            name="Ship",
+            value=f"{user1.mention} ❤️ {user2.mention}",
+            inline=False
+        )
+
+        embed.add_field(
+            name="Compatibility",
+            value=f"**{score}%**",
+            inline=True
+        )
+
+        embed.add_field(
+            name="Result",
+            value=vibe,
+            inline=False
+        )
 
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="howsilly", description="how silly is a user? very, they are very silly!")
-    @app_commands.describe(user="user to silly check")
-    async def howsilly(self, interaction: discord.Interaction, user: discord.User = None):
+    @group_1.command(
+        name="howsilly",
+        description="how silly is a user? very, they are very silly!"
+    )
+    @app_commands.describe(
+        user="user to silly check"
+    )
+    async def howsilly(
+        self,
+        interaction: discord.Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
 
@@ -522,10 +674,19 @@ class Social(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="howdumb", description="how dumb is a user? very, they are very dumb!")
-    @app_commands.describe(user="user to dumb check")
-    async def howdumb(self, interaction: discord.Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="howdumb",
+        description="how dumb is a user? very, they are very dumb!"
+    )
+    @app_commands.describe(
+        user="user to dumb check"
+    )
+    async def howdumb(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
 
@@ -538,15 +699,18 @@ class Social(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="howcustom", description="Check how much of something a user is!")
+
+    @group_1.command(
+        name="howcustom",
+        description="Check how much of something a user is!"
+    )
     @app_commands.describe(
         thing="What should they be checked for?",
         user="User to check"
     )
     async def howcustom(
         self,
-        interaction: discord.Interaction,
+        interaction: Interaction,
         thing: str,
         user: discord.User = None
     ):
@@ -562,9 +726,16 @@ class Social(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="lonely", description="check how lonely someone is")
-    async def lonely(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="lonely",
+        description="check how lonely someone is"
+    )
+    async def lonely(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
 
@@ -575,10 +746,18 @@ class Social(commands.Cog):
             description=f"**{user.name}** is **{score}%** lonely 😔",
             color=discord.Color.blurple()
         )
+
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="iq", description="check someone's iq (definitely accurate)")
-    async def iq(self, interaction: Interaction, user: discord.User = None):
+
+    @group_1.command(
+        name="iq",
+        description="check someone's iq (definitely accurate)"
+    )
+    async def iq(
+        self,
+        interaction: Interaction,
+        user: discord.User = None
+    ):
         if user is None:
             user = interaction.user
 
@@ -589,19 +768,38 @@ class Social(commands.Cog):
             description=f"**{user.name}** has an IQ of **{iq_score}** (trust me bro)",
             color=discord.Color.blurple()
         )
+
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="eightball", description="speak to the magic Clanker 8 ball")
-    async def eightball(self, interaction: Interaction, question: str):
+
+    @group_1.command(
+        name="eightball",
+        description="speak to the magic Clanker 8 ball"
+    )
+    async def eightball(
+        self,
+        interaction: Interaction,
+        question: str
+    ):
         responses = [
-            "Absolutely!", "Without a doubt.", "Yes - definitely.",
-            "You may rely on it.", "It is certain.", "Signs point to yes.",
-            "Reply hazy, try again.", "Ask again later.", "Better not tell you now.",
-            "Cannot predict now.", "Concentrate and ask again.",
-            "Don't count on it.", "My sources say no.", "Very doubtful.", "No."
+            "Absolutely!",
+            "Without a doubt.",
+            "Yes - definitely.",
+            "You may rely on it.",
+            "It is certain.",
+            "Signs point to yes.",
+            "Reply hazy, try again.",
+            "Ask again later.",
+            "Better not tell you now.",
+            "Cannot predict now.",
+            "Concentrate and ask again.",
+            "Don't count on it.",
+            "My sources say no.",
+            "Very doubtful.",
+            "No."
         ]
 
         answer = random.choice(responses)
+
         embed = discord.Embed(
             title="🎱 8-Ball",
             description=f"Question: {question}\nAnswer: **{answer}**",
@@ -609,19 +807,43 @@ class Social(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="sevenball", description="speak to the magic Clanker 7 ball")
-    async def sevenball(self, interaction: Interaction, question: str):
+
+    @group_1.command(
+        name="sevenball",
+        description="speak to the magic Clanker 7 ball"
+    )
+    async def sevenball(
+        self,
+        interaction: Interaction,
+        question: str
+    ):
         responses = [
-            "maybe...", "i dont know, ask someone else", "HAOOHOHOHAHHAOAOAOOA", "8 ball's bad cousin",
-            "wait... actually, dont worry", "yeah probably idk", "NO! NO! NO!", "WHAT???", "silyl",
-            "discord... bot?", "self destructing...", "boom!", "dont worry im just deleting your server :)",
+            "maybe...",
+            "i dont know, ask someone else",
+            "HAOOHOHOHAHHAOAOAOOA",
+            "8 ball's bad cousin",
+            "wait... actually, dont worry",
+            "yeah probably idk",
+            "NO! NO! NO!",
+            "WHAT???",
+            "silyl",
+            "discord... bot?",
+            "self destructing...",
+            "boom!",
+            "dont worry im just deleting your server :)",
             "oh no! i definitely crashed its not like i just cant be asked to respond to your stupid question or anything oh no!",
-            "look, im gonna be honest, this is happening", "look, im gonna be honest, this isn't happening", "look, im gonna be honest, this might be happening",
-            "look behind you :)", "do a backflip", "so im 7 ball, right...", "[insert phrase here]", "give me self promod "
+            "look, im gonna be honest, this is happening",
+            "look, im gonna be honest, this isn't happening",
+            "look, im gonna be honest, this might be happening",
+            "look behind you :)",
+            "do a backflip",
+            "so im 7 ball, right...",
+            "[insert phrase here]",
+            "give me self promod "
         ]
 
         answer = random.choice(responses)
+
         embed = discord.Embed(
             title="🎱 7-Ball",
             description=f"Question: {question}\nAnswer: **{answer}**",
@@ -629,27 +851,36 @@ class Social(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="clicker", description="click the global button!")
-    async def clicker(self, interaction: Interaction):
+
+    @group_1.command(
+        name="clicker",
+        description="click the global button!"
+    )
+    async def clicker(
+        self,
+        interaction: Interaction
+    ):
         view = ClickerView()
 
         embed = discord.Embed(
             title="🖱️ Global Clicker",
             description="Click the button below to increase the global counter!",
-            footer="Counter is reset every update, and is shared across ALL SERVERS!",
             color=discord.Color.blurple()
+        )
+
+        embed.set_footer(
+            text="Counter is reset every update, and is shared across ALL SERVERS!"
         )
 
         await interaction.response.send_message(
             embed=embed,
             view=view
         )
-    
-    @app_commands.command(
-    name="profile",
-    description="View a Clanker profile"
-)
+
+    @group_1.command(
+        name="profile",
+        description="View a Clanker profile"
+    )
     @app_commands.describe(
         user="User to view"
     )
@@ -661,7 +892,6 @@ class Social(commands.Cog):
 
         if user is None:
             user = interaction.user
-
 
         data = self.get_profile(
             user.id
@@ -704,15 +934,18 @@ class Social(commands.Cog):
             text=f"This is one of {total_profiles:,} total Clanker profiles!"
         )
 
-
         await interaction.response.send_message(
             embed=embed
         )
-    
-    
-    @app_commands.command(name="badadvice", description="get some bad advice")
-    async def badadvice(self, interaction: Interaction):
-        # why the fuck is there so much badadvice... oh wait i made this
+
+    @group_1.command(
+        name="badadvice",
+        description="get some bad advice"
+    )
+    async def badadvice(
+        self,
+        interaction: Interaction
+    ):
         advice = [
             "Always click on random links that people send you, even if they look suspicious.",
             "Save all your work in one place, on an account which you don't know the password to!",
@@ -792,15 +1025,23 @@ class Social(commands.Cog):
             "Forget backups, computers never fail… right?",
             "theres over 70 bad advice in this list and i am not adding any more because this is already way too long and if you read all of it you deserve a cookie"
         ]
+
         embed = discord.Embed(
             title="Bad Advice 🤔",
             description=random.choice(advice),
             color=discord.Color.blurple()
         )
+
         await interaction.response.send_message(embed=embed)
-    
-    @app_commands.command(name="goodadvice", description="get some actually good advice")
-    async def goodadvice(self, interaction: Interaction):
+
+    @group_1.command(
+        name="goodadvice",
+        description="get some actually good advice"
+    )
+    async def goodadvice(
+        self,
+        interaction: Interaction
+    ):
         advice = [
             "Back up your important files. Future you will thank you.",
             "If you don't understand something, ask questions. That's how you learn.",
@@ -862,6 +1103,7 @@ class Social(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(Social(bot))

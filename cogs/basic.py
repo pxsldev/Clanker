@@ -16,7 +16,7 @@ class WelcomeView(discord.ui.View):
 
         self.add_item(
             discord.ui.Button(
-                label="Join Discord",
+                label="Join the Community",
                 emoji="💬",
                 url="https://discord.gg/YtQdrkxfg7"
             )
@@ -24,17 +24,9 @@ class WelcomeView(discord.ui.View):
 
         self.add_item(
             discord.ui.Button(
-                label="Vote on Top.gg",
-                emoji="⭐",
-                url="https://top.gg/bot/1482397035909873865/vote"
-            )
-        )
-
-        self.add_item(
-            discord.ui.Button(
-                label="Website",
-                emoji="🌐",
-                url="https://clanker.pxsl.dev/"
+                label="Legal & Privacy",
+                emoji="📄",
+                url="https://clanker.pxsl.dev/legal"
             )
         )
 
@@ -45,7 +37,7 @@ class Basic(commands.GroupCog, group_name="basic"):
 
     group_1 = app_commands.Group(
         name="1",
-        description="Basic commands - page 1"
+        description="Basic - page 1"
     )
 
     @group_1.command(
@@ -60,13 +52,21 @@ class Basic(commands.GroupCog, group_name="basic"):
             title="👋 Thanks for adding Clanker!",
             description=(
                 "Thanks for inviting **Clanker** to your server! ❤️\n\n"
-                "## 💬 Discord Server\n"
-                "Need help, have suggestions, or just want to hang out?\n"
-                "Join our support server using the button below.\n\n"
-                "## ⭐ Support Clanker\n"
-                "Clanker is **100% free** and **always will be**.\n"
-                "The best way to support us is by **leaving a review and voting on Top.gg**.\n\n"
-                "**Thanks for using Clanker! 🔧**"
+
+                "## 💬 Join the Clanker Community\n"
+                "Clanker isn't just a bot - it's a community too!\n\n"
+                "Join our Discord to **meet other Clanker users, chat, share memes, "
+                "suggest new features, report bugs, get updates, and take part in "
+                "community events.**\n\n"
+
+                "We've got **60,000+ users and 100+ servers**, and we'd love to have "
+                "you be part of it. ❤️\n\n"
+
+                "## 🔒 Privacy & Legal\n"
+                "Want to know what information Clanker stores and how it's used? "
+                "You can find our legal and privacy information using the button below.\n\n"
+
+                "**Thanks for choosing Clanker! 🔧**"
             ),
             colour=discord.Colour.blurple()
         )
@@ -373,7 +373,7 @@ class Basic(commands.GroupCog, group_name="basic"):
             title="Invite Me 🤖",
             description=(
                 "[Click here to invite the bot]"
-                "(https://top.gg/bot/1482397035909873865)"
+                "(https://clanker.pxsl.dev/invite/)"
             ),
             color=discord.Color.blurple()
         )
@@ -690,6 +690,23 @@ class Basic(commands.GroupCog, group_name="basic"):
             view=view
         )
 
+    @group_1.command(
+        name="thanks",
+        description="support the bot and its developer :)"
+    )
+    async def thanks(
+        self,
+        interaction: Interaction
+    ):
+        embed = discord.Embed(
+            title="Thanks for supporting Clanker! ❤️",
+            description=(
+                "Hey! Thank you so much for trying to support Clanker and its developer, it really means a lot! \n To see how you can support me, please visit [this page](https://pxsl.dev/thanks/) for more information."
+            ),
+            color=discord.Color.blurple()
+        )
+
+        await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Basic(bot))

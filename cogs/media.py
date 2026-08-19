@@ -17,37 +17,42 @@ import math
 import random
 import numpy as np
 
-class Media(commands.Cog):
+
+class Media(commands.GroupCog, group_name="media"):
+    media_1 = app_commands.Group(
+        name="1",
+        description="Media - page 1"
+    )
+
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="media", description="See what the Media category does")
-    async def Media(self, interaction: Interaction):
-        command_count = len(self.get_app_commands())
-        embed = discord.Embed(
-            title="Media 📚",
-            description=(
-                "Hello, the Media category handles all of the image Media commands!\n"
-                f"There are currently **{command_count} commands** in this category."
-            ),
-            color=discord.Color.blurple()
-        )
-        await interaction.response.send_message(embed=embed)
-
-    async def get_image(self, interaction: Interaction, image: discord.Attachment = None, url: str = None):
+    async def get_image(
+        self,
+        interaction: Interaction,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
         image_url = None
 
         if image:
             image_url = image.url
+
         elif url:
             image_url = url
+
         elif interaction.message and interaction.message.reference:
             try:
-                replied = await interaction.channel.fetch_message(interaction.message.reference.message_id)
+                replied = await interaction.channel.fetch_message(
+                    interaction.message.reference.message_id
+                )
+
                 if replied.attachments:
                     image_url = replied.attachments[0].url
+
             except:
                 pass
+
         if not image_url:
             async for msg in interaction.channel.history(limit=20):
                 if msg.attachments:
@@ -62,108 +67,372 @@ class Media(commands.Cog):
                 async with session.get(image_url) as resp:
                     if resp.status != 200:
                         return None, "Error 🚫", "Failed to download the image."
+
                     data = await resp.read()
+
             return Image.open(io.BytesIO(data)), None, None
+
         except:
             return None, "Error 🚫", "Invalid image format."
 
-    async def send_error(self, interaction: Interaction, title: str, desc: str):
+    async def send_error(
+        self,
+        interaction: Interaction,
+        title: str,
+        desc: str
+    ):
         embed = discord.Embed(
             title=title,
             description=desc,
             color=discord.Color.red()
         )
+
         await interaction.response.send_message(embed=embed)
 
-    async def send_image(self, interaction: Interaction, img: Image.Image, title: str, filename: str, desc: str = None):
+    async def send_image(
+        self,
+        interaction: Interaction,
+        img: Image.Image,
+        title: str,
+        filename: str,
+        desc: str = None
+    ):
         buffer = io.BytesIO()
+
         img.save(buffer, format="PNG")
         buffer.seek(0)
-        file = discord.File(buffer, filename=filename)
+
+        file = discord.File(
+            buffer,
+            filename=filename
+        )
+
         embed = discord.Embed(
             title=title,
             description=desc if desc else "",
             color=discord.Color.blurple()
         )
-        embed.set_image(url=f"attachment://{filename}")
-        await interaction.response.send_message(embed=embed, file=file)
 
-    @app_commands.command(name="invert", description="Invert an image")
-    async def invert(self, interaction: Interaction, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
-        if not img:
-            return await self.send_error(interaction, err_title, err_desc)
-        img = ImageOps.invert(img.convert("RGB"))
-        await self.send_image(interaction, img, "Inverted Image 🌀", "invert.png")
+        embed.set_image(
+            url=f"attachment://{filename}"
+        )
 
-    @app_commands.command(name="greyscale", description="Convert image to greyscale")
-    async def greyscale(self, interaction: Interaction, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
+        await interaction.response.send_message(
+            embed=embed,
+            file=file
+        )
+
+    # ============================================================
+    # /media 1
+    # ============================================================
+
+    @media_1.command(
+        name="invert",
+        description="Invert an image"
+    )
+    async def invert(
+        self,
+        interaction: Interaction,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
         if not img:
-            return await self.send_error(interaction, err_title, err_desc)
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
+
+        img = ImageOps.invert(
+            img.convert("RGB")
+        )
+
+        await self.send_image(
+            interaction,
+            img,
+            "Inverted Image 🌀",
+            "invert.png"
+        )
+
+    @media_1.command(
+        name="greyscale",
+        description="Convert image to greyscale"
+    )
+    async def greyscale(
+        self,
+        interaction: Interaction,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
+        if not img:
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
+
         img = ImageOps.grayscale(img)
-        await self.send_image(interaction, img, "Greyscale Image ⚪", "greyscale.png")
 
-    @app_commands.command(name="deepfry", description="Deep fry an image")
-    async def deepfry(self, interaction: Interaction, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
+        await self.send_image(
+            interaction,
+            img,
+            "Greyscale Image ⚪",
+            "greyscale.png"
+        )
+
+    @media_1.command(
+        name="deepfry",
+        description="Deep fry an image"
+    )
+    async def deepfry(
+        self,
+        interaction: Interaction,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
         if not img:
-            return await self.send_error(interaction, err_title, err_desc)
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
+
         img = img.convert("RGB")
+
         img = ImageEnhance.Contrast(img).enhance(2.0)
         img = ImageEnhance.Color(img).enhance(3.0)
-        img = img.filter(ImageFilter.UnsharpMask(radius=2, percent=150))
-        await self.send_image(interaction, img, "Deepfried Image 💥", "deepfry.png")
 
-    @app_commands.command(name="blur", description="Blur an image")
-    async def blur(self, interaction: Interaction, amount: int = 5, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
-        if not img:
-            return await self.send_error(interaction, err_title, err_desc)
-        img = img.filter(ImageFilter.GaussianBlur(radius=amount))
-        await self.send_image(interaction, img, f"Blurred Image (Amount: {amount}) 💨", "blur.png")
+        img = img.filter(
+            ImageFilter.UnsharpMask(
+                radius=2,
+                percent=150
+            )
+        )
 
-    @app_commands.command(name="bloom", description="Add bloom effect")
-    async def bloom(self, interaction: Interaction, amount: float = 1.5, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
+        await self.send_image(
+            interaction,
+            img,
+            "Deepfried Image 💥",
+            "deepfry.png"
+        )
+
+    @media_1.command(
+        name="blur",
+        description="Blur an image"
+    )
+    async def blur(
+        self,
+        interaction: Interaction,
+        amount: int = 5,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
         if not img:
-            return await self.send_error(interaction, err_title, err_desc)
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
+
+        img = img.filter(
+            ImageFilter.GaussianBlur(
+                radius=amount
+            )
+        )
+
+        await self.send_image(
+            interaction,
+            img,
+            f"Blurred Image (Amount: {amount}) 💨",
+            "blur.png"
+        )
+
+    @media_1.command(
+        name="bloom",
+        description="Add bloom effect"
+    )
+    async def bloom(
+        self,
+        interaction: Interaction,
+        amount: float = 1.5,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
+        if not img:
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
+
         img = ImageEnhance.Brightness(img).enhance(amount)
-        img = img.filter(ImageFilter.GaussianBlur(radius=5))
-        await self.send_image(interaction, img, f"Bloom Image (Amount: {amount}) ✨", "bloom.png")
 
-    @app_commands.command(name="pixelate", description="Pixelate an image")
-    async def pixelate(self, interaction: Interaction, amount: int = 10, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
-        if not img:
-            return await self.send_error(interaction, err_title, err_desc)
-        img = img.resize((img.width // amount, img.height // amount), Image.NEAREST)
-        img = img.resize((img.width * amount, img.height * amount), Image.NEAREST)
-        await self.send_image(interaction, img, f"Pixelated Image (Amount: {amount}) 🟫", "pixelate.png")
+        img = img.filter(
+            ImageFilter.GaussianBlur(radius=5)
+        )
 
-    @app_commands.command(name="gif", description="Turn an image into a GIF")
-    async def gif(self, interaction: Interaction, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
+        await self.send_image(
+            interaction,
+            img,
+            f"Bloom Image (Amount: {amount}) ✨",
+            "bloom.png"
+        )
+
+    @media_1.command(
+        name="pixelate",
+        description="Pixelate an image"
+    )
+    async def pixelate(
+        self,
+        interaction: Interaction,
+        amount: int = 10,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
         if not img:
-            return await self.send_error(interaction, err_title, err_desc)
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
+
+        img = img.resize(
+            (
+                img.width // amount,
+                img.height // amount
+            ),
+            Image.NEAREST
+        )
+
+        img = img.resize(
+            (
+                img.width * amount,
+                img.height * amount
+            ),
+            Image.NEAREST
+        )
+
+        await self.send_image(
+            interaction,
+            img,
+            f"Pixelated Image (Amount: {amount}) 🟫",
+            "pixelate.png"
+        )
+
+    @media_1.command(
+        name="gif",
+        description="Turn an image into a GIF"
+    )
+    async def gif(
+        self,
+        interaction: Interaction,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
+        if not img:
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
+
         img = img.convert("RGBA")
+
         buffer = io.BytesIO()
-        img.save(buffer, format="GIF", save_all=True, loop=0)
+
+        img.save(
+            buffer,
+            format="GIF",
+            save_all=True,
+            loop=0
+        )
+
         buffer.seek(0)
-        file = discord.File(buffer, filename="image.gif")
+
+        file = discord.File(
+            buffer,
+            filename="image.gif"
+        )
+
         embed = discord.Embed(
             title="Image → GIF 🖼️",
             description="GIFs are limited to 256 colors - quality may drop ⚠️",
             color=discord.Color.blurple()
         )
-        embed.set_image(url="attachment://image.gif")
-        await interaction.response.send_message(embed=embed, file=file)
-    
-    @app_commands.command(name="png", description="Turn an image into a PNG")
-    async def png(self, interaction: Interaction, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
+
+        embed.set_image(
+            url="attachment://image.gif"
+        )
+
+        await interaction.response.send_message(
+            embed=embed,
+            file=file
+        )
+
+    @media_1.command(
+        name="png",
+        description="Turn an image into a PNG"
+    )
+    async def png(
+        self,
+        interaction: Interaction,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
         if not img:
-            return await self.send_error(interaction, err_title, err_desc)
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
 
         try:
             img.seek(0)
@@ -173,58 +442,137 @@ class Media(commands.Cog):
         img = img.convert("RGBA")
 
         buffer = io.BytesIO()
-        img.save(buffer, format="PNG")
+
+        img.save(
+            buffer,
+            format="PNG"
+        )
+
         buffer.seek(0)
 
-        file = discord.File(buffer, filename="image.png")
+        file = discord.File(
+            buffer,
+            filename="image.png"
+        )
 
         embed = discord.Embed(
             title="Image → PNG 🖼️",
             description="Converted successfully.",
             color=discord.Color.blurple()
         )
-        embed.set_image(url="attachment://image.png")
 
-        await interaction.response.send_message(embed=embed, file=file)
-    
-    @app_commands.command(name="jpg", description="Turn an image into a JPG")
-    async def jpg(self, interaction: Interaction, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
+        embed.set_image(
+            url="attachment://image.png"
+        )
+
+        await interaction.response.send_message(
+            embed=embed,
+            file=file
+        )
+
+    @media_1.command(
+        name="jpg",
+        description="Turn an image into a JPG"
+    )
+    async def jpg(
+        self,
+        interaction: Interaction,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
         if not img:
-            return await self.send_error(interaction, err_title, err_desc)
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
 
         try:
             img.seek(0)
         except (AttributeError, EOFError):
             pass
 
-        if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
-            background = Image.new("RGB", img.size, (255, 255, 255))
-            background.paste(img.convert("RGBA"), mask=img.convert("RGBA").split()[-1])
+        if (
+            img.mode in ("RGBA", "LA")
+            or (
+                img.mode == "P"
+                and "transparency" in img.info
+            )
+        ):
+            background = Image.new(
+                "RGB",
+                img.size,
+                (255, 255, 255)
+            )
+
+            background.paste(
+                img.convert("RGBA"),
+                mask=img.convert("RGBA").split()[-1]
+            )
+
             img = background
+
         else:
             img = img.convert("RGB")
 
         buffer = io.BytesIO()
-        img.save(buffer, format="JPEG", quality=95)
+
+        img.save(
+            buffer,
+            format="JPEG",
+            quality=95
+        )
+
         buffer.seek(0)
 
-        file = discord.File(buffer, filename="image.jpg")
+        file = discord.File(
+            buffer,
+            filename="image.jpg"
+        )
 
         embed = discord.Embed(
             title="Image → JPG 🖼️",
             description="Transparency has been replaced with a white background.",
             color=discord.Color.blurple()
         )
-        embed.set_image(url="attachment://image.jpg")
 
-        await interaction.response.send_message(embed=embed, file=file)
-    
-    @app_commands.command(name="webp", description="Turn an image into a WebP")
-    async def webp(self, interaction: Interaction, image: discord.Attachment = None, url: str = None):
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
+        embed.set_image(
+            url="attachment://image.jpg"
+        )
+
+        await interaction.response.send_message(
+            embed=embed,
+            file=file
+        )
+
+    @media_1.command(
+        name="webp",
+        description="Turn an image into a WebP"
+    )
+    async def webp(
+        self,
+        interaction: Interaction,
+        image: discord.Attachment = None,
+        url: str = None
+    ):
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
+
         if not img:
-            return await self.send_error(interaction, err_title, err_desc)
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
 
         try:
             img.seek(0)
@@ -234,21 +582,39 @@ class Media(commands.Cog):
         img = img.convert("RGBA")
 
         buffer = io.BytesIO()
-        img.save(buffer, format="WEBP", quality=95)
+
+        img.save(
+            buffer,
+            format="WEBP",
+            quality=95
+        )
+
         buffer.seek(0)
 
-        file = discord.File(buffer, filename="image.webp")
+        file = discord.File(
+            buffer,
+            filename="image.webp"
+        )
 
         embed = discord.Embed(
             title="Image → WebP 🖼️",
             description="Converted successfully.",
             color=discord.Color.blurple()
         )
-        embed.set_image(url="attachment://image.webp")
 
-        await interaction.response.send_message(embed=embed, file=file)
+        embed.set_image(
+            url="attachment://image.webp"
+        )
 
-    @app_commands.command(name="caption", description="Add a caption to the top of an image")
+        await interaction.response.send_message(
+            embed=embed,
+            file=file
+        )
+
+    @media_1.command(
+        name="caption",
+        description="Add a caption to the top of an image"
+    )
     async def caption(
         self,
         interaction: Interaction,
@@ -258,10 +624,18 @@ class Media(commands.Cog):
     ):
         await interaction.response.defer()
 
-        img, err_title, err_desc = await self.get_image(interaction, image, url)
+        img, err_title, err_desc = await self.get_image(
+            interaction,
+            image,
+            url
+        )
 
         if not img:
-            return await self.send_error(interaction, err_title, err_desc)
+            return await self.send_error(
+                interaction,
+                err_title,
+                err_desc
+            )
 
         if not text:
             return await self.send_error(
@@ -287,35 +661,55 @@ class Media(commands.Cog):
                     img.convert("RGBA").copy()
                 )
 
-            duration = img.info.get("duration", 100)
-            loop = img.info.get("loop", 0)
+            duration = img.info.get(
+                "duration",
+                100
+            )
+
+            loop = img.info.get(
+                "loop",
+                0
+            )
 
         else:
-            frames.append(img.convert("RGBA"))
+            frames.append(
+                img.convert("RGBA")
+            )
+
             duration = None
             loop = 0
-
 
         processed_frames = []
 
         for frame in frames:
             width, height = frame.size
 
-            font_size = max(32, width // 10)
+            font_size = max(
+                32,
+                width // 10
+            )
 
             font = ImageFont.truetype(
                 "C:/Windows/Fonts/impact.ttf",
                 font_size
             )
 
-            chars_per_line = max(8, width // (font_size // 2))
+            chars_per_line = max(
+                8,
+                width // (font_size // 2)
+            )
 
             wrapped = textwrap.fill(
                 text,
                 width=chars_per_line
             )
 
-            temp = Image.new("RGBA", (width, height), "white")
+            temp = Image.new(
+                "RGBA",
+                (width, height),
+                "white"
+            )
+
             draw = ImageDraw.Draw(temp)
 
             bbox = draw.multiline_textbbox(
@@ -329,7 +723,11 @@ class Media(commands.Cog):
             text_height = bbox[3] - bbox[1]
 
             padding = font_size // 2
-            caption_height = text_height + (padding * 2)
+
+            caption_height = (
+                text_height +
+                (padding * 2)
+            )
 
             output = Image.new(
                 "RGBA",
@@ -342,8 +740,14 @@ class Media(commands.Cog):
                 (0, caption_height)
             )
 
-            x = (width - text_width) / 2
-            y = ((caption_height - text_height) / 2) - bbox[1]
+            x = (
+                width -
+                text_width
+            ) / 2
+
+            y = (
+                (caption_height - text_height) / 2
+            ) - bbox[1]
 
             with Pilmoji(output) as pilmoji:
                 pilmoji.text(
@@ -355,7 +759,6 @@ class Media(commands.Cog):
                 )
 
             processed_frames.append(output)
-
 
         buffer = io.BytesIO()
 
@@ -380,7 +783,6 @@ class Media(commands.Cog):
 
             filename = "caption.png"
 
-
         buffer.seek(0)
 
         file = discord.File(
@@ -401,8 +803,11 @@ class Media(commands.Cog):
             embed=embed,
             file=file
         )
-    
-    @app_commands.command(name="quote", description="Create a dramatic quote")
+
+    @media_1.command(
+        name="quote",
+        description="Create a dramatic quote"
+    )
     async def quote(
         self,
         interaction: discord.Interaction,
@@ -416,8 +821,13 @@ class Media(commands.Cog):
         if user and not text:
             found = False
 
-            async for message in interaction.channel.history(limit=100):
-                if message.author.id == user.id and message.content:
+            async for message in interaction.channel.history(
+                limit=100
+            ):
+                if (
+                    message.author.id == user.id
+                    and message.content
+                ):
                     text = message.content
                     author = user
                     found = True
@@ -426,10 +836,10 @@ class Media(commands.Cog):
             if not found:
                 return await interaction.followup.send(
                     embed=discord.Embed(
-                    title="Error ❌",
-                    description="Couldn't find a recent message from that user.",
-                    color=discord.Color.red()
-                )
+                        title="Error ❌",
+                        description="Couldn't find a recent message from that user.",
+                        color=discord.Color.red()
+                    )
                 )
 
         if not text:
@@ -442,7 +852,9 @@ class Media(commands.Cog):
             )
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(author.display_avatar.url) as resp:
+            async with session.get(
+                author.display_avatar.url
+            ) as resp:
                 avatar_bytes = await resp.read()
 
         avatar = Image.open(
@@ -463,7 +875,7 @@ class Media(commands.Cog):
         glow = Image.new(
             "RGBA",
             (WIDTH, HEIGHT),
-            (0,0,0,0)
+            (0, 0, 0, 0)
         )
 
         glow_draw = ImageDraw.Draw(glow)
@@ -501,11 +913,10 @@ class Media(commands.Cog):
                 "C:/Windows/Fonts/georgia.ttf",
                 220
             ),
-            fill=(255,255,255,35)
+            fill=(255, 255, 255, 35)
         )
 
         max_text_width = 750
-
         font_size = 65
 
         while True:
@@ -516,7 +927,10 @@ class Media(commands.Cog):
 
             wrapped = textwrap.fill(
                 text,
-                width=max(15, int(font_size / 2))
+                width=max(
+                    15,
+                    int(font_size / 2)
+                )
             )
 
             bbox = draw.multiline_textbbox(
@@ -526,16 +940,23 @@ class Media(commands.Cog):
                 spacing=15
             )
 
-            text_width = bbox[2] - bbox[0]
+            text_width = (
+                bbox[2] -
+                bbox[0]
+            )
 
-            if text_width <= max_text_width or font_size <= 30:
+            if (
+                text_width <= max_text_width
+                or font_size <= 30
+            ):
                 break
 
             font_size -= 5
 
-
-        text_height = bbox[3] - bbox[1]
-
+        text_height = (
+            bbox[3] -
+            bbox[1]
+        )
 
         draw.multiline_text(
             (
@@ -549,7 +970,7 @@ class Media(commands.Cog):
         )
 
         avatar = avatar.resize(
-            (180,180)
+            (180, 180)
         )
 
         mask = Image.new(
@@ -561,28 +982,28 @@ class Media(commands.Cog):
         mask_draw = ImageDraw.Draw(mask)
 
         mask_draw.ellipse(
-            (0,0,180,180),
+            (0, 0, 180, 180),
             fill=255
         )
 
         img.paste(
             avatar,
-            (1080,300),
+            (1080, 300),
             mask
         )
 
         draw.text(
-            (980,510),
+            (980, 510),
             f"- {author.display_name}",
             font=name_font,
-            fill=(220,220,220)
+            fill=(220, 220, 220)
         )
 
         draw.text(
-            (100,630),
+            (100, 630),
             "https://clanker.pxsl.dev/",
             font=small_font,
-            fill=(130,130,130)
+            fill=(130, 130, 130)
         )
 
         buffer = io.BytesIO()
@@ -601,7 +1022,10 @@ class Media(commands.Cog):
             )
         )
 
-    @app_commands.command(name="brighten", description="Brighten an image")
+    @media_1.command(
+        name="brighten",
+        description="Brighten an image"
+    )
     async def brighten(
         self,
         interaction: Interaction,
@@ -624,9 +1048,13 @@ class Media(commands.Cog):
 
         img = img.convert("RGB")
 
-        brightness = 1 + (amount * 0.2)
+        brightness = 1 + (
+            amount * 0.2
+        )
 
-        img = ImageEnhance.Brightness(img).enhance(brightness)
+        img = ImageEnhance.Brightness(
+            img
+        ).enhance(brightness)
 
         await self.send_image(
             interaction,
@@ -635,8 +1063,10 @@ class Media(commands.Cog):
             "brighten.png"
         )
 
-
-    @app_commands.command(name="darken", description="Darken an image")
+    @media_1.command(
+        name="darken",
+        description="Darken an image"
+    )
     async def darken(
         self,
         interaction: Interaction,
@@ -659,9 +1089,14 @@ class Media(commands.Cog):
 
         img = img.convert("RGB")
 
-        brightness = max(0, 1 - (amount * 0.2))
+        brightness = max(
+            0,
+            1 - (amount * 0.2)
+        )
 
-        img = ImageEnhance.Brightness(img).enhance(brightness)
+        img = ImageEnhance.Brightness(
+            img
+        ).enhance(brightness)
 
         await self.send_image(
             interaction,
@@ -669,8 +1104,11 @@ class Media(commands.Cog):
             f"Darkened Image 🌑 (Level: {amount})",
             "darken.png"
         )
-    
-    @app_commands.command(name="frames", description="Extract all frames from a GIF or video")
+
+    @media_1.command(
+        name="frames",
+        description="Extract all frames from a GIF or video"
+    )
     async def frames(
         self,
         interaction: Interaction,
@@ -685,6 +1123,7 @@ class Media(commands.Cog):
 
         if image:
             image_url = image.url
+
         elif url:
             image_url = url
 
@@ -702,28 +1141,48 @@ class Media(commands.Cog):
                 async with session.get(image_url) as resp:
                     data = await resp.read()
 
-            input_path = os.path.join(temp_dir, "input")
+            input_path = os.path.join(
+                temp_dir,
+                "input"
+            )
 
             with open(input_path, "wb") as f:
                 f.write(data)
 
-            output_dir = os.path.join(temp_dir, "output")
-            os.makedirs(output_dir, exist_ok=True)
+            output_dir = os.path.join(
+                temp_dir,
+                "output"
+            )
+
+            os.makedirs(
+                output_dir,
+                exist_ok=True
+            )
 
             if image_url.lower().split("?")[0].endswith(".gif"):
                 gif = Image.open(input_path)
 
-                for i in range(min(gif.n_frames, MAX_FRAMES)):
+                for i in range(
+                    min(
+                        gif.n_frames,
+                        MAX_FRAMES
+                    )
+                ):
                     gif.seek(i)
 
                     frame = gif.convert("RGBA")
 
                     frame.save(
-                        os.path.join(output_dir, f"frame_{i:04}.png")
+                        os.path.join(
+                            output_dir,
+                            f"frame_{i:04}.png"
+                        )
                     )
 
             else:
-                cap = cv2.VideoCapture(input_path)
+                cap = cv2.VideoCapture(
+                    input_path
+                )
 
                 i = 0
 
@@ -734,7 +1193,10 @@ class Media(commands.Cog):
                         break
 
                     cv2.imwrite(
-                        os.path.join(output_dir, f"frame_{i:04}.png"),
+                        os.path.join(
+                            output_dir,
+                            f"frame_{i:04}.png"
+                        ),
                         frame
                     )
 
@@ -742,26 +1204,46 @@ class Media(commands.Cog):
 
                 cap.release()
 
-            frame_count = len(os.listdir(output_dir))
+            frame_count = len(
+                os.listdir(output_dir)
+            )
 
-            zip_path = os.path.join(temp_dir, "frames.zip")
+            zip_path = os.path.join(
+                temp_dir,
+                "frames.zip"
+            )
 
-            with zipfile.ZipFile(zip_path, "w") as zipf:
-                for frame in os.listdir(output_dir):
+            with zipfile.ZipFile(
+                zip_path,
+                "w"
+            ) as zipf:
+
+                for frame in os.listdir(
+                    output_dir
+                ):
                     zipf.write(
-                        os.path.join(output_dir, frame),
+                        os.path.join(
+                            output_dir,
+                            frame
+                        ),
                         frame
                     )
 
             embed = discord.Embed(
                 title="📦 Extracted Frames",
-                description=f"Successfully extracted **{frame_count} frames**!",
+                description=(
+                    f"Successfully extracted "
+                    f"**{frame_count} frames**!"
+                ),
                 color=discord.Color.blurple()
             )
 
             if frame_count >= MAX_FRAMES:
                 embed.set_footer(
-                    text=f"Limited to the first {MAX_FRAMES} frames."
+                    text=(
+                        f"Limited to the first "
+                        f"{MAX_FRAMES} frames."
+                    )
                 )
 
             await interaction.followup.send(
@@ -777,8 +1259,11 @@ class Media(commands.Cog):
                 temp_dir,
                 ignore_errors=True
             )
-    
-    @app_commands.command(name="boomerang", description="Create a boomerang effect from a GIF or video")
+
+    @media_1.command(
+        name="boomerang",
+        description="Create a boomerang effect from a GIF or video"
+    )
     async def boomerang(
         self,
         interaction: Interaction,
@@ -793,6 +1278,7 @@ class Media(commands.Cog):
 
         if image:
             image_url = image.url
+
         elif url:
             image_url = url
 
@@ -812,7 +1298,10 @@ class Media(commands.Cog):
                 async with session.get(image_url) as resp:
                     data = await resp.read()
 
-            input_path = os.path.join(temp_dir, "input")
+            input_path = os.path.join(
+                temp_dir,
+                "input"
+            )
 
             with open(input_path, "wb") as f:
                 f.write(data)
@@ -822,9 +1311,17 @@ class Media(commands.Cog):
             if image_url.lower().split("?")[0].endswith(".gif"):
                 gif = Image.open(input_path)
 
-                duration = gif.info.get("duration", 100)
+                duration = gif.info.get(
+                    "duration",
+                    100
+                )
 
-                for i in range(min(gif.n_frames, MAX_FRAMES)):
+                for i in range(
+                    min(
+                        gif.n_frames,
+                        MAX_FRAMES
+                    )
+                ):
                     gif.seek(i)
 
                     frames.append(
@@ -832,14 +1329,20 @@ class Media(commands.Cog):
                     )
 
             else:
-                cap = cv2.VideoCapture(input_path)
+                cap = cv2.VideoCapture(
+                    input_path
+                )
 
-                fps = cap.get(cv2.CAP_PROP_FPS)
+                fps = cap.get(
+                    cv2.CAP_PROP_FPS
+                )
 
                 if fps <= 0:
                     fps = 24
 
-                duration = int(1000 / fps)
+                duration = int(
+                    1000 / fps
+                )
 
                 i = 0
 
@@ -871,7 +1374,10 @@ class Media(commands.Cog):
                     )
                 )
 
-            boomerang_frames = frames + frames[-2::-1]
+            boomerang_frames = (
+                frames +
+                frames[-2::-1]
+            )
 
             output = os.path.join(
                 temp_dir,
@@ -889,13 +1395,19 @@ class Media(commands.Cog):
 
             embed = discord.Embed(
                 title="🔁 Boomerang Created",
-                description=f"Created a boomerang with **{len(boomerang_frames)} frames**!",
+                description=(
+                    f"Created a boomerang with "
+                    f"**{len(boomerang_frames)} frames**!"
+                ),
                 color=discord.Color.blurple()
             )
 
             if len(frames) >= MAX_FRAMES:
                 embed.set_footer(
-                    text=f"Limited to the first {MAX_FRAMES} frames."
+                    text=(
+                        f"Limited to the first "
+                        f"{MAX_FRAMES} frames."
+                    )
                 )
 
             embed.set_image(
@@ -915,8 +1427,11 @@ class Media(commands.Cog):
                 temp_dir,
                 ignore_errors=True
             )
-    
-    @app_commands.command(name="sharpen", description="Sharpen an image")
+
+    @media_1.command(
+        name="sharpen",
+        description="Sharpen an image"
+    )
     async def sharpen(
         self,
         interaction: Interaction,
@@ -939,7 +1454,10 @@ class Media(commands.Cog):
 
         img = img.convert("RGB")
 
-        amount = max(1, min(amount, 10))
+        amount = max(
+            1,
+            min(amount, 10)
+        )
 
         sharpened = img.filter(
             ImageFilter.UnsharpMask(
@@ -955,8 +1473,11 @@ class Media(commands.Cog):
             f"Sharpened Image 🔪 (Amount: {amount})",
             "sharpen.png"
         )
-    
-    @app_commands.command(name="contrast", description="Change the contrast of an image")
+
+    @media_1.command(
+        name="contrast",
+        description="Change the contrast of an image"
+    )
     async def contrast(
         self,
         interaction: Interaction,
@@ -979,9 +1500,14 @@ class Media(commands.Cog):
 
         img = img.convert("RGB")
 
-        amount = max(0, min(amount, 5))
+        amount = max(
+            0,
+            min(amount, 5)
+        )
 
-        img = ImageEnhance.Contrast(img).enhance(amount)
+        img = ImageEnhance.Contrast(
+            img
+        ).enhance(amount)
 
         await self.send_image(
             interaction,
@@ -989,8 +1515,11 @@ class Media(commands.Cog):
             f"Contrast Image 🌓 (Amount: {amount})",
             "contrast.png"
         )
-    
-    @app_commands.command(name="destroy", description="Absolutely destroy an image")
+
+    @media_1.command(
+        name="destroy",
+        description="Absolutely destroy an image"
+    )
     async def destroy(
         self,
         interaction: Interaction,
@@ -1028,20 +1557,34 @@ class Media(commands.Cog):
 
         applied = []
 
-        amount = random.randint(5, 12)
+        amount = random.randint(
+            5,
+            12
+        )
 
         for _ in range(amount):
             effect = random.choice(effects)
 
             if effect == "blur":
-                value = random.randint(1, 15)
+                value = random.randint(
+                    1,
+                    15
+                )
+
                 img = img.filter(
                     ImageFilter.GaussianBlur(value)
                 )
-                applied.append(f"Blur ({value})")
+
+                applied.append(
+                    f"Blur ({value})"
+                )
 
             elif effect == "sharpen":
-                value = random.randint(100, 500)
+                value = random.randint(
+                    100,
+                    500
+                )
+
                 img = img.filter(
                     ImageFilter.UnsharpMask(
                         radius=random.randint(1, 5),
@@ -1049,35 +1592,83 @@ class Media(commands.Cog):
                         threshold=random.randint(1, 5)
                     )
                 )
-                applied.append(f"Sharpen ({value}%)")
+
+                applied.append(
+                    f"Sharpen ({value}%)"
+                )
 
             elif effect == "contrast":
-                value = random.uniform(0.5, 4)
-                img = ImageEnhance.Contrast(img).enhance(value)
-                applied.append(f"Contrast ({round(value, 2)})")
+                value = random.uniform(
+                    0.5,
+                    4
+                )
+
+                img = ImageEnhance.Contrast(
+                    img
+                ).enhance(value)
+
+                applied.append(
+                    f"Contrast ({round(value, 2)})"
+                )
 
             elif effect == "colour":
-                value = random.uniform(0, 5)
-                img = ImageEnhance.Color(img).enhance(value)
-                applied.append(f"Colour ({round(value, 2)})")
+                value = random.uniform(
+                    0,
+                    5
+                )
+
+                img = ImageEnhance.Color(
+                    img
+                ).enhance(value)
+
+                applied.append(
+                    f"Colour ({round(value, 2)})"
+                )
 
             elif effect == "brightness":
-                value = random.uniform(0.2, 3)
-                img = ImageEnhance.Brightness(img).enhance(value)
-                applied.append(f"Brightness ({round(value, 2)})")
+                value = random.uniform(
+                    0.2,
+                    3
+                )
+
+                img = ImageEnhance.Brightness(
+                    img
+                ).enhance(value)
+
+                applied.append(
+                    f"Brightness ({round(value, 2)})"
+                )
 
             elif effect == "darkness":
-                value = random.uniform(0.1, 0.8)
-                img = ImageEnhance.Brightness(img).enhance(value)
-                applied.append(f"Darkness ({round(value, 2)})")
+                value = random.uniform(
+                    0.1,
+                    0.8
+                )
+
+                img = ImageEnhance.Brightness(
+                    img
+                ).enhance(value)
+
+                applied.append(
+                    f"Darkness ({round(value, 2)})"
+                )
 
             elif effect == "pixelate":
-                value = random.randint(2, 30)
+                value = random.randint(
+                    2,
+                    30
+                )
 
                 small = img.resize(
                     (
-                        max(1, img.width // value),
-                        max(1, img.height // value)
+                        max(
+                            1,
+                            img.width // value
+                        ),
+                        max(
+                            1,
+                            img.height // value
+                        )
                     ),
                     Image.NEAREST
                 )
@@ -1087,7 +1678,9 @@ class Media(commands.Cog):
                     Image.NEAREST
                 )
 
-                applied.append(f"Pixelate ({value})")
+                applied.append(
+                    f"Pixelate ({value})"
+                )
 
             elif effect == "noise":
                 pixels = img.load()
@@ -1096,28 +1689,52 @@ class Media(commands.Cog):
                     for y in range(img.height):
                         r, g, b = pixels[x, y]
 
-                        noise = random.randint(-50, 50)
+                        noise = random.randint(
+                            -50,
+                            50
+                        )
 
                         pixels[x, y] = (
-                            max(0, min(255, r + noise)),
-                            max(0, min(255, g + noise)),
-                            max(0, min(255, b + noise))
+                            max(
+                                0,
+                                min(255, r + noise)
+                            ),
+                            max(
+                                0,
+                                min(255, g + noise)
+                            ),
+                            max(
+                                0,
+                                min(255, b + noise)
+                            )
                         )
 
                 applied.append("Noise")
 
             elif effect == "invert":
                 img = ImageOps.invert(img)
-                applied.append("Invert")
+
+                applied.append(
+                    "Invert"
+                )
 
         await self.send_image(
             interaction,
             img,
             "Image Destroyed 💀",
             "destroy.png",
-            f"Applied {len(applied)} random effects:\n" +
-            "\n".join(f"• {x}" for x in applied[:10])
+            (
+                f"Applied {len(applied)} random effects:\n"
+                +
+                "\n".join(
+                    f"• {x}"
+                    for x in applied[:10]
+                )
+            )
         )
 
+
 async def setup(bot):
-    await bot.add_cog(Media(bot))
+    await bot.add_cog(
+        Media(bot)
+    )

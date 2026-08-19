@@ -7,13 +7,11 @@ import json
 import math
 import time
 
-
 def owner_check():
     async def predicate(interaction: Interaction):
         return interaction.user.id in interaction.client.data.get("owners", [])
 
     return app_commands.check(predicate)
-
 
 def admin_check():
     async def predicate(interaction: Interaction):
@@ -23,7 +21,6 @@ def admin_check():
         )
 
     return app_commands.check(predicate)
-
 
 class Admin(commands.GroupCog, group_name="admin"):
 
@@ -40,7 +37,7 @@ class Admin(commands.GroupCog, group_name="admin"):
 
     group_1 = app_commands.Group(
         name="1",
-        description="Admin commands - page 1"
+        description="Admin - page 1"
     )
 
     @group_1.command(

@@ -38,7 +38,7 @@ class Utility(commands.GroupCog, group_name="utility"):
     
     group_1 = app_commands.Group(
         name="1",
-        description="Utility commands - page 1"
+        description="Utility - page 1"
     )
 
     @group_1.command(
