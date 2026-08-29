@@ -39,7 +39,7 @@ The code may depend on:
 - internal systems
 - infrastructure that is not included in this repository
 
-You are welcome to look through the code and contribute, but getting your own instance running is not guaranteed.
+You are welcome to look through the code and contribute, but getting your own instance running is not guaranteed **or permitted**
 
 ## 😭 Documentation
 
