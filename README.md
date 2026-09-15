@@ -3,7 +3,7 @@
 A fun, feature-packed Discord entertainment bot.
 
 - 🌐 Website: https://clanker.pxsl.dev/
-- 📸 Video: https://youtu.be/ybv6r-PJwxI
+- 🗣️ Discord: https://discord.gg/YtQdrkxfg7
 
 ## 🔗 Bot Links
 
@@ -39,7 +39,7 @@ The code may depend on:
 - internal systems
 - infrastructure that is not included in this repository
 
-You are welcome to look through the code and contribute, but getting your own instance running is not guaranteed **or permitted**
+You are welcome to look through the code and contribute, but getting your own instance running is **not permitted**
 
 ## 😭 Documentation
 
@@ -54,6 +54,44 @@ If you want to understand something specific, you may need to explore the code y
 If you have questions, feel free to ask in our Discord server:
 
 https://discord.gg/YtQdrkxfg7
+
+## 💜 Contributing
+
+Want to help make Clanker even better? **You're more than welcome to contribute!**
+
+Whether you're fixing a bug, adding a new command, improving an existing feature, or just making something cool, contributions are always appreciated.
+
+### 🛠️ Getting Started
+
+1. **Fork or clone the [Clanker GitHub repository](https://github.com/PxslGames/Clanker).**
+2. Open `main.py` and set:
+
+   ```python
+   TESTING = True
+   ```
+3. Add your bot token to `data.json`.
+4. Make your changes or add your new feature.
+5. Test everything thoroughly using your development bot.
+6. Commit and push your changes to your fork.
+7. Open a **Pull Request** on the main repository explaining what you changed.
+
+We'll review your PR and, if everything looks good, **it can be merged into Clanker!** 🎉
+
+### 💡 What Can I Contribute?
+
+Pretty much anything that improves Clanker, including:
+
+* 🆕 New commands
+* 🐛 Bug fixes
+* ⚡ Performance improvements
+* ✨ New features
+* 📝 Documentation
+* 🎨 Improvements to existing responses or embeds
+* 🔧 Code improvements
+
+If you're not sure whether an idea is suitable, ask in the discord server!
+
+**Thanks for helping make Clanker better! 💜**
 
 ## 🔃 Updates
 
