@@ -30,17 +30,17 @@ PXSL_API_KEY = data.get("pxsl_api_key")
 if not PXSL_API_KEY:
     raise ValueError("pxsl_api_key not found in data.json!")
 
-PXSL_API_URL = "https://api.pxsl.dev/update"
+PXSL_API_URL = "https://api.pxsl.dev/clanker/update"
 
 TESTING = False
-TEST_GUILD_ID = 1482405732329459754
+TEST_GUILD_ID = 1545958838480408596
 
 cooldowns = {}
 
 intents = discord.Intents.default()
 intents.guilds = True
 
-class Clanker(commands.Bot):
+class Clanker(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(
             command_prefix="lol this bot uses slash commands idot", # this literally does nothing im being serious lol - pxsl
@@ -409,11 +409,6 @@ class Clanker(commands.Bot):
 
     @tasks.loop(seconds=15)
     async def statusloop(self):
-        if not hasattr(self, "status_toggle"):
-            self.status_toggle = False
-
-        self.status_toggle = not self.status_toggle
-
         guild_count = len(self.guilds)
 
         total_members = sum(
@@ -421,14 +416,9 @@ class Clanker(commands.Bot):
             for guild in self.guilds
         )
 
-        if self.status_toggle:
-            activity = discord.CustomActivity(
-                name=f"clanking in {guild_count:,} servers!"
-            )
-        else:
-            activity = discord.CustomActivity(
-                name=f"clanking with {total_members:,} users!"
-            )
+        activity = discord.CustomActivity(
+            name=f"clanking in {guild_count:,} servers!"
+        )
 
         await self.change_presence(
             activity=activity
@@ -437,7 +427,8 @@ class Clanker(commands.Bot):
         print(
             f"[STATUS UPDATE] "
             f"Guilds: {guild_count} | "
-            f"Members: {total_members}"
+            f"Members: {total_members} |"
+            f"Shards: {self.shard_count}"
         )
 
     @statusloop.before_loop

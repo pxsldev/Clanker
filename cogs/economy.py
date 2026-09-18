@@ -17,6 +17,68 @@ class Economy(commands.GroupCog, group_name="economy"):
         self.cursor = self.db.cursor()
         self._setup_db()
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.guild is None:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Server Installation Required",
+                    description=(
+                        "Sorry, Clanker can only be installed in a server.\n\n"
+                        "Please add Clanker to a server before using these commands."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        try:
+            await interaction.guild.fetch_member(self.bot.user.id)
+
+        except discord.NotFound:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Clanker Isn't Installed",
+                    description=(
+                        "Clanker isn't installed in this server.\n\n"
+                        "Please add Clanker to this server before using these commands."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Unable to Check",
+                    description=(
+                        "I couldn't verify whether Clanker is installed "
+                        "in this server."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        except discord.HTTPException:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Discord Error",
+                    description=(
+                        "Discord didn't let me verify whether Clanker "
+                        "is installed in this server. Please try again."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        return True
+
     def _setup_db(self):
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (

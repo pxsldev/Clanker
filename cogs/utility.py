@@ -15,6 +15,68 @@ class Utility(commands.GroupCog, group_name="utility"):
     def __init__(self, bot):
         self.bot = bot
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.guild is None:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Server Installation Required",
+                    description=(
+                        "Sorry, Clanker can only be installed in a server.\n\n"
+                        "Please add Clanker to a server before using these commands."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        try:
+            await interaction.guild.fetch_member(self.bot.user.id)
+
+        except discord.NotFound:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Clanker Isn't Installed",
+                    description=(
+                        "Clanker isn't installed in this server.\n\n"
+                        "Please add Clanker to this server before using these commands."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Unable to Check",
+                    description=(
+                        "I couldn't verify whether Clanker is installed "
+                        "in this server."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        except discord.HTTPException:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Discord Error",
+                    description=(
+                        "Discord didn't let me verify whether Clanker "
+                        "is installed in this server. Please try again."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        return True
+
     def parse_time(self, time_str: str) -> int:
         matches = re.findall(r"(\d+)([smhdw])", time_str.lower())
 
@@ -412,6 +474,279 @@ class Utility(commands.GroupCog, group_name="utility"):
                 ephemeral=True
             )
 
+    @group_1.command(
+        name="steam",
+        description="get info on a steam game"
+    )
+    @app_commands.describe(
+        game="steam game name"
+    )
+    async def steam(
+        self,
+        interaction: Interaction,
+        game: str
+    ):
+        await interaction.response.defer()
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "https://store.steampowered.com/api/storesearch/",
+                    params={
+                        "term": game,
+                        "cc": "us", # this is the country code but in this case it's used for currency, just change it to like "gb" for pounds for example :)
+                        "l": "english"
+                    }
+                ) as resp:
+
+                    if resp.status != 200:
+                        embed = discord.Embed(
+                            title="❌ Steam API Error",
+                            description=(
+                                "Steam failed to return search results.\n\n"
+                                "Please try again later."
+                            ),
+                            color=discord.Color.red()
+                        )
+
+                        return await interaction.followup.send(
+                            embed=embed,
+                            ephemeral=True
+                        )
+
+                    search_data = await resp.json()
+
+                items = search_data.get("items", [])
+
+                if not items:
+                    embed = discord.Embed(
+                        title="❌ Game Not Found",
+                        description=(
+                            f"I couldn't find a Steam game matching "
+                            f"`{game}`."
+                        ),
+                        color=discord.Color.red()
+                    )
+
+                    return await interaction.followup.send(
+                        embed=embed,
+                        ephemeral=True
+                    )
+                
+                def normalize(name):
+                    name = name.lower()
+
+                    name = re.sub(
+                        r"[™®©]",
+                        "",
+                        name
+                    )
+
+                    name = re.sub(
+                        r"[^a-z0-9\s]",
+                        "",
+                        name
+                    )
+
+                    name = re.sub(
+                        r"\s+",
+                        " ",
+                        name
+                    ).strip()
+
+                    return name
+
+                requested = normalize(game)
+
+                exact_match = None
+
+                for item in items:
+                    item_name = item.get("name", "")
+
+                    if normalize(item_name) == requested:
+                        exact_match = item
+                        break
+
+                if exact_match is None:
+                    embed = discord.Embed(
+                        title="❌ Game Not Found",
+                        description=(
+                            f"I couldn't find an exact Steam game "
+                            f"called `{game}`."
+                        ),
+                        color=discord.Color.red()
+                    )
+
+                    return await interaction.followup.send(
+                        embed=embed,
+                        ephemeral=True
+                    )
+
+                app_id = exact_match["id"]
+
+                async with session.get(
+                    "https://store.steampowered.com/api/appdetails",
+                    params={
+                        "appids": app_id,
+                        "cc": "gb",
+                        "l": "english"
+                    }
+                ) as resp:
+
+                    if resp.status != 200:
+                        embed = discord.Embed(
+                            title="❌ Steam API Error",
+                            description=(
+                                "Steam found the game, but I couldn't "
+                                "retrieve its information."
+                            ),
+                            color=discord.Color.red()
+                        )
+
+                        return await interaction.followup.send(
+                            embed=embed,
+                            ephemeral=True
+                        )
+
+                    details_response = await resp.json()
+
+                app_data = details_response.get(
+                    str(app_id),
+                    {}
+                )
+
+                if not app_data.get("success"):
+                    embed = discord.Embed(
+                        title="❌ Game Information Unavailable",
+                        description=(
+                            "Steam found the game, but its information "
+                            "is currently unavailable."
+                        ),
+                        color=discord.Color.red()
+                    )
+
+                    return await interaction.followup.send(
+                        embed=embed,
+                        ephemeral=True
+                    )
+
+                game_data = app_data["data"]
+
+                embed = discord.Embed(
+                    title=f"🎮 {game_data.get('name', game)}",
+                    description=game_data.get(
+                        "short_description",
+                        "No description available."
+                    ),
+                    url=f"https://store.steampowered.com/app/{app_id}",
+                    color=discord.Color.blurple()
+                )
+
+                if game_data.get("header_image"):
+                    embed.set_image(
+                        url=game_data["header_image"]
+                    )
+
+                price = game_data.get("price_overview")
+
+                if price:
+                    embed.add_field(
+                        name="💰 Price",
+                        value=price.get(
+                            "final_formatted",
+                            "Unknown"
+                        ),
+                        inline=True
+                    )
+                elif game_data.get("is_free"):
+                    embed.add_field(
+                        name="💰 Price",
+                        value="Free",
+                        inline=True
+                    )
+
+                developers = game_data.get("developers", [])
+
+                if developers:
+                    embed.add_field(
+                        name="👨‍💻 Developer",
+                        value=", ".join(developers),
+                        inline=True
+                    )
+
+                publishers = game_data.get("publishers", [])
+
+                if publishers:
+                    embed.add_field(
+                        name="🏢 Publisher",
+                        value=", ".join(publishers),
+                        inline=True
+                    )
+
+                release_date = game_data.get("release_date", {})
+
+                if release_date.get("date"):
+                    embed.add_field(
+                        name="📅 Release Date",
+                        value=release_date["date"],
+                        inline=True
+                    )
+
+                genres = game_data.get("genres", [])
+
+                if genres:
+                    genre_names = [
+                        genre["description"]
+                        for genre in genres
+                        if genre.get("description")
+                    ]
+
+                    if genre_names:
+                        embed.add_field(
+                            name="🎯 Genres",
+                            value=", ".join(genre_names),
+                            inline=True
+                        )
+
+                embed.set_footer(
+                    text=f"Steam App ID: {app_id}"
+                )
+
+                await interaction.followup.send(
+                    embed=embed
+                )
+
+        except aiohttp.ClientError:
+            embed = discord.Embed(
+                title="❌ Connection Error",
+                description=(
+                    "I couldn't connect to Steam.\n\n"
+                    "Please try again later."
+                ),
+                color=discord.Color.red()
+            )
+
+            await interaction.followup.send(
+                embed=embed,
+                ephemeral=True
+            )
+
+        except Exception as e:
+            print("STEAM COMMAND ERROR:", e)
+
+            embed = discord.Embed(
+                title="❌ Unexpected Error",
+                description=(
+                    "Something went wrong while getting "
+                    "the Steam game information."
+                ),
+                color=discord.Color.red()
+            )
+
+            await interaction.followup.send(
+                embed=embed,
+                ephemeral=True
+            )
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))

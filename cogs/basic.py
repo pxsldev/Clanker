@@ -35,6 +35,68 @@ class Basic(commands.GroupCog, group_name="basic"):
         self.bot = bot
         self.bot_start_time = datetime.now(timezone.utc)
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.guild is None:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Server Installation Required",
+                    description=(
+                        "Sorry, Clanker can only be installed in a server.\n\n"
+                        "Please add Clanker to a server before using these commands."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        try:
+            await interaction.guild.fetch_member(self.bot.user.id)
+
+        except discord.NotFound:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Clanker Isn't Installed",
+                    description=(
+                        "Clanker isn't installed in this server.\n\n"
+                        "Please add Clanker to this server before using these commands."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Unable to Check",
+                    description=(
+                        "I couldn't verify whether Clanker is installed "
+                        "in this server."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        except discord.HTTPException:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Discord Error",
+                    description=(
+                        "Discord didn't let me verify whether Clanker "
+                        "is installed in this server. Please try again."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        return True
+
     group_1 = app_commands.Group(
         name="1",
         description="Basic - page 1"
@@ -699,9 +761,12 @@ class Basic(commands.GroupCog, group_name="basic"):
         interaction: Interaction
     ):
         embed = discord.Embed(
-            title="Thanks for supporting Clanker! ❤️",
+            title="Thank you so much for wanting to support me 💜",
             description=(
-                "Hey! Thank you so much for trying to support Clanker and its developer, it really means a lot! \n To see how you can support me, please visit [this page](https://pxsl.dev/thanks/) for more information."
+                "Check out the links below:\n"
+                "[💬 Join the Discord](https://discord.gg/YtQdrkxfg7)\n"
+                "[🌐 Visit the Website](https://clanker.pxsl.dev/)\n"
+                "[💜 Support Us](https://pxsl.dev/thanks/)"
             ),
             color=discord.Color.blurple()
         )

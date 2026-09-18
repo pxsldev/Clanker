@@ -6,6 +6,9 @@ import random
 import discord
 import sqlite3
 from datetime import datetime, timezone
+import aiohttp
+from io import BytesIO
+from urllib.parse import urlencode
 
 click_count = 0
 
@@ -37,6 +40,68 @@ class Social(commands.GroupCog, group_name="social"):
         self.profile_db = sqlite3.connect("profiles.db")
         self.profile_cursor = self.profile_db.cursor()
         self.setup_profiles()
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.guild is None:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Server Installation Required",
+                    description=(
+                        "Sorry, Clanker can only be installed in a server.\n\n"
+                        "Please add Clanker to a server before using these commands."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        try:
+            await interaction.guild.fetch_member(self.bot.user.id)
+
+        except discord.NotFound:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Clanker Isn't Installed",
+                    description=(
+                        "Clanker isn't installed in this server.\n\n"
+                        "Please add Clanker to this server before using these commands."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Unable to Check",
+                    description=(
+                        "I couldn't verify whether Clanker is installed "
+                        "in this server."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        except discord.HTTPException:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="❌ Discord Error",
+                    description=(
+                        "Discord didn't let me verify whether Clanker "
+                        "is installed in this server. Please try again."
+                    ),
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return False
+
+        return True
 
     def setup_profiles(self):
         self.profile_cursor.execute("""
@@ -719,11 +784,20 @@ class Social(commands.GroupCog, group_name="social"):
 
         score = random.randint(1, 100)
 
-        embed = discord.Embed(
-            title=f"How {thing.title()}? 🤔",
-            description=f"**{user.name}** is **{score}%** {thing}!",
-            color=discord.Color.blurple()
-        )
+        if thing.lower() == "trans" and user.id == 1033895617505788015:
+            score = 100
+
+            embed = discord.Embed(
+                        title=f"How {thing.title()}? 🤔",
+                        description=f"**{user.name}** is **{score}%** {thing}! (also she is very autistic just sayin like extremely, like beyond the point of no return.)",
+                        color=discord.Color.blurple()
+                    )
+        else:
+            embed = discord.Embed(
+                        title=f"How {thing.title()}? 🤔",
+                        description=f"**{user.name}** is **{score}%** {thing}!",
+                        color=discord.Color.blurple()
+                    )
 
         await interaction.response.send_message(embed=embed)
 
@@ -1104,6 +1178,116 @@ class Social(commands.GroupCog, group_name="social"):
 
         await interaction.response.send_message(embed=embed)
 
+    @group_1.command(
+        name="message",
+        description="generate a fake Discord message"
+    )
+    @app_commands.describe(
+        username="Username shown in the fake message",
+        content="Content of the fake message",
+        color="Username colour, e.g. #5865f2",
+        timestamp="Timestamp in ISO 8601 format"
+    )
+    async def message(
+        self,
+        interaction: Interaction,
+        username: str,
+        content: str,
+        color: str = "#5865f2",
+        timestamp: str = None
+    ):
+
+        if timestamp is None:
+            timestamp = datetime.now(timezone.utc).isoformat()
+
+        params = {
+            "username": username,
+            "content": content,
+            "color": color,
+            "timestamp": timestamp
+        }
+
+        url = (
+            "https://api.popcat.xyz/v2/discord-message?"
+            + urlencode(params)
+        )
+
+        print(url)
+
+        await interaction.response.defer()
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        await interaction.followup.send(
+                            embed=discord.Embed(
+                                title="❌ Generation Failed",
+                                description=(
+                                    f"The Pop Cat API returned "
+                                    f"`{response.status}`."
+                                ),
+                                color=discord.Color.red()
+                            ),
+                            ephemeral=True
+                        )
+                        return
+
+                    image_data = await response.read()
+
+            file = discord.File(
+                BytesIO(image_data),
+                filename="fake-discord-message.png"
+            )
+
+            await interaction.followup.send(file=file)
+
+        except Exception as e:
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="❌ Generation Failed",
+                    description=f"```{e}```",
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            
+    @group_1.command(
+        name="torture",
+        description="Torture yourself with a random AITA post"
+    )
+    async def torture(self, interaction: Interaction):
+        await interaction.response.defer()
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://api.pxsl.dev/aita.json") as response:
+                if response.status != 200:
+                    await interaction.followup.send(
+                        embed=discord.Embed(
+                            title="❌ Error",
+                            description="Couldn't fetch an AITA post... sorry!",
+                            color=discord.Color.blurple()
+                        )
+                    )
+                    return
+
+                posts = await response.json()
+
+        post = random.choice(posts)
+
+        embed = discord.Embed(
+            title=post["title"],
+            description=post["text"],
+            url=post["url"],
+            color=discord.Color.blurple()
+        )
+
+        embed.set_footer(text="r/AmItheAsshole • Powered by Pxsl's API and Reddit")
+
+        message = await interaction.followup.send(embed=embed, wait=True)
+
+        await message.add_reaction("✅")
+        await message.add_reaction("❌")
 
 async def setup(bot):
     await bot.add_cog(Social(bot))
