@@ -1906,6 +1906,37 @@ class Video(commands.GroupCog, group_name="video"):
             "Applied a random combination of effects."
         )
 
+    @video_1.command(
+        name="rotate",
+        description="Change the Rotation of a video"
+    )
+    async def rotate(
+        self,
+        interaction: Interaction,
+        angle: float = 90.0,
+        media: discord.Attachment = None,
+        url: str = None,
+        clockwise: bool = True,
+    ):
+        if clockwise:
+            angle = -angle
+        
+        def processor(img):
+            return img.rotate(angle=angle)
+
+        clockwiseStr = "Counter-clockwise"
+        if clockwise:
+            clockwiseStr = "Clockwise"
+
+        await self.process_effect(
+            interaction,
+            media,
+            url,
+            processor,
+            f"Rotate Video 🔄 {clockwiseStr} (Angle: {abs(angle)})",
+            "rotate.mp4"
+        )
+
 
 async def setup(bot):
     await bot.add_cog(
