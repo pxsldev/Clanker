@@ -18,21 +18,22 @@ import aiohttp
 with open("data.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
+TESTING = True
+
 TOKEN = data.get("token")
 if not TOKEN:
     raise ValueError("Token not found in data.json!")
 
 TOPGG_TOKEN = data.get("topgg_token")
-if not TOPGG_TOKEN:
+if not TOPGG_TOKEN and not TESTING:
     raise ValueError("TOPGG_TOKEN not found in data.json!")
 
 PXSL_API_KEY = data.get("pxsl_api_key")
-if not PXSL_API_KEY:
+if not PXSL_API_KEY and not TESTING:
     raise ValueError("pxsl_api_key not found in data.json!")
 
 PXSL_API_URL = "https://api.pxsl.dev/clanker/update"
 
-TESTING = False
 TEST_GUILD_ID = 1545958838480408596
 
 cooldowns = {}
